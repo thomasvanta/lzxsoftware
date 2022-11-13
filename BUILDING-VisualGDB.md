@@ -55,7 +55,7 @@ more complex. If DfuSeDemo does not detect your attached Diver module as a progr
 its newer drivers might work. [Download it here](https://www.st.com/en/development-tools/stm32cubeprog.html), 
 and you can follow the [official instructions](https://community.lzxindustries.net/t/all-about-diver/1455#firmware-update-instructions-7), except instead of using DfuSeDemo, do the following:
    * Run STM32CubeProgrammer and select the *Erasing & Programming* icon on the left side toolbar (second from the top.)
-   * Click *Connect* in the upper right hand corner.
+   * Change the dropdown in the upper-right-hand corner from *STLINK* to *USB*, then click *Connect*.
    * In the Download section, click *Browse* next to File Path and choose the `.hex` file that VisualGDB built, in `lzxsoftware\hardware\diver\main\VisualGDB\Debug\main.hex`.
    * Click *Start Programming*.
    * Click *Disconnect*.
