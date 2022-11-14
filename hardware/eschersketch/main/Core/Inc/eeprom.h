@@ -45,7 +45,7 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "stm32f4xx_hal.h"
-#include "stm32_hal_legacy.h"
+//#include "stm32_hal_legacy.h"
 
 /* Exported constants --------------------------------------------------------*/
 /* EEPROM emulation firmware error codes */
