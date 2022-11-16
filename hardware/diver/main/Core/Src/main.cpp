@@ -13,6 +13,8 @@
 #include <string>
 #include <stdio.h>
 
+#include "perlin.h"
+
 
 
 enum
@@ -627,7 +629,76 @@ int main(void)
 				if (bank_display_mode)
 				{
 					selected_bank = (selected_bank + 1) % NUM_BANKS;	
-					GenerateLUT(selected_bank);
+					//GenerateLUT(selected_bank);
+
+					for (uint32_t i = 0; i < vres; i++)
+					{
+						float a = float(i) / float(vres);
+						float b = (a * a) * 1023.0;
+						float c = (a * 1023.0 * 2.0) - (b);
+
+						// uint16_t cur_fib_segment = i / fib_width;
+						// uint16_t cur_fib_interpolate_a = ((i % fib_width)*DAC_MAX_VALUE) / fib_width;
+						// uint16_t fib_result = ((fib[cur_fib_segment]*1023)/322) + ((cur_fib_interpolate_a*(((fib[cur_fib_segment+1]-fib[cur_fib_segment])*DAC_MAX_VALUE)/322))/DAC_MAX_VALUE);
+
+						switch (selected_bank)
+						{
+						case 0:
+							lut[i] = ((i * DAC_MAX_VALUE) / vres) & 1023;
+							break;
+						case 1:
+							lut[i] = uint16_t(c) & 1023;
+							break;
+						case 2:
+							lut[i] = uint16_t(b) & 1023;
+							break;
+						case 3:
+							lut[i] = ((i * DAC_MAX_VALUE) / vres) & 0b1111000000;
+							break;
+						case 4:
+							lut[i] = ((i * DAC_MAX_VALUE) / vres) & 0b1110000000;
+							break;
+						case 5:
+							lut[i] = ((i * DAC_MAX_VALUE) / vres) & 0b1100000000;
+							break;
+							//
+							//
+						case 8:
+							lut[i] = uint16_t(perlin1d(a, 5, 4)) & 1023;
+							break;
+						case 9:
+							lut[i] = uint16_t(perlin1d(a, 7, 4)) & 1023;
+							break;
+						case 10:
+							lut[i] = uint16_t(perlin1d(a, 20, 4)) & 1023;
+							break;
+						case 11:
+							lut[i] = uint16_t(perlin1d(a, 60, 4)) & 1023;
+							break;
+						case 12:
+							lut[i] = uint16_t(perlin1d(a, 100.0, 1)) & 1023;
+							break;
+						case 13:
+							lut[i] = uint16_t(perlin1d(a, 100.0, 2)) & 1023;
+							break;
+						case 14:
+							lut[i] = uint16_t(perlin1d(a, 100.0, 5)) & 1023;
+							break;
+
+						case 15:
+							lut[i] = uint16_t(perlin1d(a, (hphase_slider & 0b1111111111110) * 0.1, 4)) & 1023;
+							break;
+						case 16:
+							lut[i] = uint16_t(perlin1d(a, (hphase_slider)*0.1, 4)) & 1023;
+							break;
+						case 17:
+							lut[i] = uint16_t(perlin1d(a, (hphase_slider & 0b1111111111110), 4)) & 1023;
+							break;
+						case 18:
+							lut[i] = uint16_t(perlin1d(a, (hphase_slider), 4)) & 1023;
+							break;
+												}
+					}
 				}
 				bank_display_counter = 0;	
 				
@@ -846,52 +917,91 @@ int main(void)
 			//	samples_wave[sampleReadPtr][vres + vres - i] = samples_wave[sampleReadPtr][i];
 			//	samples_hphase_cv[sampleReadPtr][vres + vres - i] = samples_hphase_cv[sampleReadPtr][i];
 			//}
-			//Waveform generation here
-			for(uint32_t i = 0 ; i < hres ; i++)
-			{
-				uint32_t sample_index;
-				sample_index = i;
 
-				if (state_scrollx)
+				// Waveform generation here
+				for (uint32_t i = 0; i < hres; i++)
 				{
-					sample_index = (sample_index + (hres-hphasecnt) + HPHASE_OFFSET) % (hres);	
-				}
-				else
-				{
-					sample_index = (sample_index + (hres-hphase_slider) + HPHASE_OFFSET) % (hres);
-				}
-				
-				if (state_mirrorx) { 
-					if (sample_index >= (hres >> 1))
+					uint32_t sample_index;
+					sample_index = i;
+					float a = float(i) / float(hres);
+
+					switch (selected_bank)
 					{
-						sample_index = ((hres >> 1) - (sample_index + 1 - (hres >> 1))) << 1; 	
+
+					case 15:
+						lut[i] = uint16_t(perlin1d(a, (hphase_slider) * 0.1, 4)) & 1023;
+						break;
+					case 16:
+						lut[i] = uint16_t(perlin1d(a, (hphase_slider) * 0.25, 4)) & 1023;
+						break;
+					case 17:
+						lut[i] = uint16_t(perlin1d(a, (hphase_slider) * 0.5, 4)) & 1023;
+						break;
+					case 18:
+						lut[i] = uint16_t(perlin1d(a, (hphase_slider) * 0.75, 4)) & 1023;
+						break;
+					}
+
+					if (state_scrollx)
+					{
+						sample_index = (sample_index + (hres - hphasecnt) + HPHASE_OFFSET) % (hres);
 					}
 					else
 					{
-						sample_index = sample_index << 1;
+						switch (selected_bank)
+						{
+
+						case 15:
+						case 16:
+						case 17:
+						case 18:
+							sample_index = (sample_index + (hres) + HPHASE_OFFSET) % (hres);
+							break;
+						default:
+							sample_index = (sample_index + (hres - hphase_slider) + HPHASE_OFFSET) % (hres);
+							break;
+						}
 					}
-				}
 
-				if (state_invert)	{ sample_index = hres - 1 - sample_index; }
+					if (state_mirrorx)
+					{
+						if (sample_index >= (hres >> 1))
+						{
+							sample_index = ((hres >> 1) - (sample_index + 1 - (hres >> 1))) << 1;
+						}
+						else
+						{
+							sample_index = sample_index << 1;
+						}
+					}
 
-				uint32_t sample;
-				uint32_t sampleplusramp;
-				if ((lut[sample_index] + samples_wave[sampleReadPtr][sample_index]-512) > DAC_MAX_VALUE)
-				{
-					sampleplusramp = DAC_MAX_VALUE;
-				} else if ((lut[sample_index] + samples_wave[sampleReadPtr][sample_index]) < 512)
-				{
-					sampleplusramp = 0;
-				}
-				else
-				{
-					sampleplusramp = (lut[sample_index] + samples_wave[sampleReadPtr][sample_index]-512);
-				}
-				switch (selected_bank)
-				{
-				case 6:		
-				case 7:	 sample = samples_wave[sampleReadPtr][sample_index]; break;	
-				default: sample = sampleplusramp&1023; break;
+					if (state_invert)
+					{
+						sample_index = hres - 1 - sample_index;
+					}
+
+					uint32_t sample;
+					uint32_t sampleplusramp;
+					if ((lut[sample_index] + samples_wave[sampleReadPtr][sample_index] - 512) > DAC_MAX_VALUE)
+					{
+						sampleplusramp = DAC_MAX_VALUE;
+					}
+					else if ((lut[sample_index] + samples_wave[sampleReadPtr][sample_index]) < 512)
+					{
+						sampleplusramp = 0;
+					}
+					else
+					{
+						sampleplusramp = (lut[sample_index] + samples_wave[sampleReadPtr][sample_index] - 512);
+					}
+					switch (selected_bank)
+					{
+					case 6:
+					//case 11:
+					case 7:	 sample = samples_wave[sampleReadPtr][sample_index];
+						break;	
+					default: sample = sampleplusramp&1023;
+						break;
 				}				
 				hwave[waveWritePtr][i] = sample;
 				hwave[waveWritePtr][hres+i] = sample;
@@ -902,6 +1012,25 @@ int main(void)
 			{
 				uint32_t sample_index;	
 				sample_index = i;
+				/*
+				float a = float(i) / float(vres);
+				switch (selected_bank)
+				{
+
+				case 15:
+					lut[i] = uint16_t(perlin1d(a, (vphase_slider & 0b1111111111110) * 0.25, 4)) & 1023;
+					break;
+				case 16:
+					lut[i] = uint16_t(perlin1d(a, (vphase_slider)*0.25, 4)) & 1023;
+					break;
+				case 17:
+					lut[i] = uint16_t(perlin1d(a, (vphase_slider & 0b1111111111110) * 0.5, 4)) & 1023;
+					break;
+				case 18:
+					lut[i] = uint16_t(perlin1d(a, (vphase_slider)*0.5, 4)) & 1023;
+					break;
+				}*/
+
 				if (state_scrolly)
 				{
 					sample_index = (sample_index + (vres - vphasecnt) + (vres - vphase_cv) + VPHASE_OFFSET) % (vres);	
@@ -940,9 +1069,12 @@ int main(void)
 				}
 				switch (selected_bank)
 				{
-				case 6:		
-				case 7:	 sample = samples_wave[sampleReadPtr][sample_index]; break;	
-				default: sample = sampleplusramp & 1023; break;
+					case 6:
+					//case 11:
+					case 7: sample = samples_wave[sampleReadPtr][sample_index];
+						break;
+					default: sample = sampleplusramp & 1023;
+						break;
 				}				
 				vwave[waveWritePtr][i] = sample;
 				hphase_cv[waveWritePtr][i] = sample_hphase;
@@ -1022,9 +1154,14 @@ int main(void)
 
 			waveRenderComplete = 1;	
 			Display_Refresh();
-		}		
+			}
 	}	
 }
+
+
+
+
+//==========================================================================
 
 void GenerateLUT(uint8_t waveform)
 {
@@ -1049,8 +1186,10 @@ void GenerateLUT(uint8_t waveform)
 			case 3: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 0b1111000000; break;
 			case 4: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 0b1110000000; break;
 			case 5: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 0b1100000000; break;
-
-		}
+			case 6:
+				lut[i] = perlin1d(a, 0.5, 4);
+				break;
+			}
 	}
 }
 
