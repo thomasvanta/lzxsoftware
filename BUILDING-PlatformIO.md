@@ -57,8 +57,9 @@ Debugging with PlatformIO should work with one or more of the following devices:
    | 1 GND     | 12 GND        |
 
 1. Connect the specified pins of the debugger to the 6-pin debugging connector on the back panel of the module. Pin 1 is the closest to the bottom edge of the board.
-2. Choose *Terminal > Run Task...* and select *PlatformIO: Upload (diver-stlink)*, or click the *Switch PlatformIO Project Environment* control on the PlatformIO toolbar and select *env:diver-stlink*, then click the arrow icon in the lower left of the toolbar. 
-3. To debug the firmware code, go to *Run > Start Debugging* or hit F5. The module will reboot and pause in the initialization routine.
+2. Turn on your Eurorack case power.
+3. Choose *Terminal > Run Task...* and select *PlatformIO: Upload (diver-stlink)*, or click the *Switch PlatformIO Project Environment* control on the PlatformIO toolbar and select *env:diver-stlink*, then click the arrow icon in the lower left of the toolbar. 
+4. To debug the firmware code, go to *Run > Start Debugging* or hit F5. The module will reboot and pause in the initialization routine.
 
 ## Other debugging options that should work
 
