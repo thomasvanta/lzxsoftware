@@ -12,7 +12,7 @@ The original build toolchain for the firmware in this repository requires Visual
 
 1. Install [Visual Studio Community 2022](https://visualstudio.microsoft.com/downloads/)
 2. Install the [VisualGDB 30-day trial](https://visualgdb.com/download/).
-3. Clone this repository to your local computer using one of these methods:
+3. Clone the repository at  https://github.com/lzxindustries/lzxsoftware to your local computer using one of these methods:
    * Click the 'Code' button on GitHub and click "Open in Visual Studio"
    * Open Visual Studio and and choose "Clone a repository" on the start screen
    * (Advanced) Use the [Git command-line tools](https://git-scm.com/download/win).
