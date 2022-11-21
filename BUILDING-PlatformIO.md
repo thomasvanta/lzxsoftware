@@ -26,7 +26,7 @@
 *Misconfiguring electronics could damage your module, your Eurorack case, and/or your computer. Proceed completely at your own risk!*
 
 1. Disconnect your module from Eurorack power, and connect a USB A to Mini-B cable between your computer and the USB port on the back of the module.
-2. Diver should present as a USB device in Device Firmware Update mode. If it doesn't appear in your USB device tree, or you get DFU errors in later steps, you may need to install STM32 DFU drivers.
+2. Diver should present as a USB device in Device Firmware Update mode. If it doesn't appear in your USB device tree, or you get DFU errors in later steps, you may need to install the [STM32 programming tools](https://www.st.com/en/development-tools/stm32cubeprog.html) to make sure your device is recognized. Restart Visual Studio Code after your've installed the STM32 tools.
 3. Choose *Terminal > Run Task...* and select *PlatformIO: Upload (diver-usb)*, or click the arrow icon in the lower left PlatformIO toolbar. 
 4. Disconnect the USB cable and reconnect the module to Eurorack power.
 
