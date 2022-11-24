@@ -777,7 +777,7 @@ int main(void)
 						lut[i] = uint16_t(perlin1d(a, (hphase_slider) * 0.75, 4)) & 1023;
 						break;
 					case 19:
-						lut[i] = (i * DAC_MAX_VALUE * (hphase_slider / (uint16_t)8) / vres) & 1023;
+						lut[i] = (i * DAC_MAX_VALUE * hphase_slider / (uint16_t)16 / vres) & 1023;
 						break;
 					}
 
