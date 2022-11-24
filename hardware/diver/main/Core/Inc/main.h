@@ -56,7 +56,7 @@
 
 /* USER CODE BEGIN Includes */
 #define LINECOUNT_DELAY 0
-#define NUM_BANKS 19
+#define NUM_BANKS 20
 #define HPHASE_OFFSET (487-117)
 #define VPHASE_OFFSET 0
 #define MAX_SLIDER_VALUE 1220

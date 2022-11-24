@@ -14,8 +14,10 @@
 #include <stdio.h>
 
 #include "perlin.h"
+#include "bank.h"
 
-
+//ENUM and Variable declarations
+#pragma region DECLARATIONS
 
 enum
 {
@@ -537,11 +539,12 @@ TIM_HandleTypeDef htim1;
 extern DMA_HandleTypeDef hdma_tim1_uev;
 uint32_t ADCValue;
 
+#pragma endregion
+
 int main(void)
 {
-	
-
-
+	//SETUP
+	#pragma region SETUP
 	HAL_Init();
 	HAL_Delay(250);
 	SystemClock_Config();
@@ -598,17 +601,23 @@ int main(void)
 	__HAL_TIM_ENABLE(&htim1);
 	HAL_ADC_Start(&hadc1);
 	
+	//Till now was Setup
+	#pragma endregion
+
+	// Here Starts the drawing Loop
 	while (1)
 	{
 			
 		if (evenfield_event && oddfield_event == 0) {
 			evenfield_event = 0;         	// new even field
 		}
-								
+
+		//everything happens just in the odd field, TODO: ask Lars reason why						
 		if (oddfield_event)
 		{
 			oddfield_event = 0;            // new odd field
 
+			// reset all buttons state, TODO: move into its own function for simplicity of reading
 			buttons[kButtonBankSelect].rising = 0;
 			buttons[kButtonMap].rising = 0;
 			buttons[kButtonRestore].rising = 0;
@@ -623,87 +632,20 @@ int main(void)
 			captureEnable = 0;
 			Buttons_Poll();
 
-		
+			// generate a static LUT at bank change
 			if (buttons[kButtonBankSelect].rising)
 			{
 				if (bank_display_mode)
 				{
 					selected_bank = (selected_bank + 1) % NUM_BANKS;	
-					//GenerateLUT(selected_bank);
-
-					for (uint32_t i = 0; i < vres; i++)
-					{
-						float a = float(i) / float(vres);
-						float b = (a * a) * 1023.0;
-						float c = (a * 1023.0 * 2.0) - (b);
-
-						// uint16_t cur_fib_segment = i / fib_width;
-						// uint16_t cur_fib_interpolate_a = ((i % fib_width)*DAC_MAX_VALUE) / fib_width;
-						// uint16_t fib_result = ((fib[cur_fib_segment]*1023)/322) + ((cur_fib_interpolate_a*(((fib[cur_fib_segment+1]-fib[cur_fib_segment])*DAC_MAX_VALUE)/322))/DAC_MAX_VALUE);
-
-						switch (selected_bank)
-						{
-						case 0:
-							lut[i] = ((i * DAC_MAX_VALUE) / vres) & 1023;
-							break;
-						case 1:
-							lut[i] = uint16_t(c) & 1023;
-							break;
-						case 2:
-							lut[i] = uint16_t(b) & 1023;
-							break;
-						case 3:
-							lut[i] = ((i * DAC_MAX_VALUE) / vres) & 0b1111000000;
-							break;
-						case 4:
-							lut[i] = ((i * DAC_MAX_VALUE) / vres) & 0b1110000000;
-							break;
-						case 5:
-							lut[i] = ((i * DAC_MAX_VALUE) / vres) & 0b1100000000;
-							break;
-							//
-							//
-						case 8:
-							lut[i] = uint16_t(perlin1d(a, 5, 4)) & 1023;
-							break;
-						case 9:
-							lut[i] = uint16_t(perlin1d(a, 7, 4)) & 1023;
-							break;
-						case 10:
-							lut[i] = uint16_t(perlin1d(a, 20, 4)) & 1023;
-							break;
-						case 11:
-							lut[i] = uint16_t(perlin1d(a, 60, 4)) & 1023;
-							break;
-						case 12:
-							lut[i] = uint16_t(perlin1d(a, 100.0, 1)) & 1023;
-							break;
-						case 13:
-							lut[i] = uint16_t(perlin1d(a, 100.0, 2)) & 1023;
-							break;
-						case 14:
-							lut[i] = uint16_t(perlin1d(a, 100.0, 5)) & 1023;
-							break;
-
-						case 15:
-							lut[i] = uint16_t(perlin1d(a, (hphase_slider & 0b1111111111110) * 0.1, 4)) & 1023;
-							break;
-						case 16:
-							lut[i] = uint16_t(perlin1d(a, (hphase_slider)*0.1, 4)) & 1023;
-							break;
-						case 17:
-							lut[i] = uint16_t(perlin1d(a, (hphase_slider & 0b1111111111110), 4)) & 1023;
-							break;
-						case 18:
-							lut[i] = uint16_t(perlin1d(a, (hphase_slider), 4)) & 1023;
-							break;
-												}
-					}
+					GenerateLUT(selected_bank);
 				}
 				bank_display_counter = 0;	
 				
 			}
 			
+			//===================== display feedback / visual =============
+			#pragma region VISUALDISPLAY
 			if (bank_display_counter < 91)
 			{
 				bank_display_counter++;	
@@ -720,11 +662,14 @@ int main(void)
 			{
 				bank_display_mode = 1;
 			}
+			//=================end display =========================
+			#pragma endregion
 
+			//..............State Machine for Capture (Freeze)..............
+			#pragma region FREEZE
 			captureEnable = 0;
 			if (buttons[kButtonFreeze].rising)
 			{
-				
 				if (frozen == 1)
 				{
 					captureEnable = 1;
@@ -748,7 +693,12 @@ int main(void)
 			{
 				captureEnable = 1;
 			}
+			//.............End Freeze SM..........................
+			#pragma endregion
 
+			
+			//------------------State Machine For Scrolling (set [h-v]phascnt)----------------
+			#pragma region SCROLL
 			if (state_scrollx)
 			{
 				//
@@ -756,18 +706,28 @@ int main(void)
 				uint16_t speed;
 				if (hphase_slider >= (hres >> 1))
 				{
-					speed = hphase_slider - (hres >> 1);
+					speed = (hphase_slider - (hres >> 1)) * 0.5; //just half speed for now
 
 					hphasecnt = (hphasecnt + (speed >> 2)) % hres;
 				}
 				else
 				{
-					speed = (hres >> 1) - hphase_slider;
+					speed = ((hres >> 1) - hphase_slider) * 0.5;
 
 					hphasecnt = (hres + hphasecnt - (speed >> 2)) % hres;
 				}
 				//hphase_slider = hphasecnt;
-				
+				switch (selected_bank)
+				{
+
+				case 15:
+				case 16:
+				case 17:
+				case 18:
+				case 19:
+					hphasecnt = (hphasecnt + (uint16_t)0.01) % hres;
+					break;
+				}
 			}
 
 			if (state_scrolly)
@@ -775,156 +735,32 @@ int main(void)
 				uint16_t speed;
 				if (vphase_slider >= (vres >> 1))
 				{
-					speed = vphase_slider - (vres >> 1);
+					speed = (vphase_slider - (vres >> 1)) * 0.5; //half speed
 					vphasecnt = (vphasecnt + (speed >> 2)) % vres;
 				}
 				else
 				{
-					speed = (vres >> 1) - vphase_slider;
+					speed = ((vres >> 1) - vphase_slider) * 0.5;
 
 					vphasecnt = (vres + vphasecnt - (speed >> 2)) % vres;
 				}
 				//vphase_slider = vphasecnt;
 			}
+			//-------------end Scroll SM--------------------------------------
+			#pragma endregion
 
-			//			// Rendering start
-			//			if (selected_bank == 0 || selected_bank == 1)
-			//			{
-			//				
-			//				interlace_mode = !selected_bank;
-			//				samples[sampleReadPtr][vres - 1] = samples[sampleReadPtr][vres - 2];
-			//			
-			//				for (uint32_t i = 0; i < hres; i++)
-			//				{
-			//					uint32_t curline = i + HBLANK;
-			//					if (buttons[kButtonInvert].togglestate)
-			//					{
-			//						curline = (hres - HBLANK - curline);
-			//					}
-			//					if (interlace_mode == 1)
-			//					{
-			//						if (buttons[kButtonMirrorX].togglestate && (i > (hres >> 1)))
-			//						{
-			//							//hwave[waveWritePtr][curline] = (samples[sampleReadPtr][((hres - i)*(vres))/hres]);
-			//							hwave[waveWritePtr][curline] = (samples[sampleReadPtr][hres - i]);
-			//						}
-			//						else
-			//						{
-			//							//hwave[waveWritePtr][curline] = (samples[sampleReadPtr][((i*(vres)) / hres)]);
-			//							hwave[waveWritePtr][curline] = (samples[sampleReadPtr][i]);
-			//						}
-			//					}
-			//					else
-			//					{
-			//						//hwave[waveWritePtr][curline] = (samples[sampleReadPtr][((i*(lines_per_oddfield)) / hres)])&DAC_MAX_VALUE;
-			//						hwave[waveWritePtr][curline] = (samples[sampleReadPtr][i]);
-			//					}		
+			// TODO: move BANKS into objects and pass buttons and other states as a struct??
 			//
-			//				}
-			//
-			//				
-			//
-			//
-			//				for (uint32_t i = 0; i < (vres); i++)
-			//				{
-			//					hphase[waveWritePtr][i] = samples_hphase[sampleReadPtr][i];
-			//					vwave[waveWritePtr][i] = samples[sampleReadPtr][i];
-			//					uint32_t curline = i;
-			//					if (buttons[kButtonInvert].togglestate)
-			//					{
-			//						curline = (vres - curline);
-			//					}
-			//
-			//					if (interlace_mode == 1)
-			//					{	
-			//						if (i > (vres >> 1))
-			//						{
-			//							vwave[waveWritePtr][curline] = (samples[sampleReadPtr][((i - (vres >> 1)) << 1) + 1]);
-			//							hphase[waveWritePtr][curline] = (samples_hphase[sampleReadPtr][((i - (vres >> 1)) << 1) + 1]);
-			//							if (buttons[kButtonMirrorY].togglestate && (i > ((vres >> 1) + (vres >> 2))))
-			//							{
-			//								vwave[waveWritePtr][curline] = vwave[waveWritePtr][vres - i];	
-			//							}
-			//						}
-			//						else
-			//						{
-			//							vwave[waveWritePtr][curline] = (samples[sampleReadPtr][i << 1]);
-			//							hphase[waveWritePtr][curline] = (samples_hphase[sampleReadPtr][i << 1]);
-			//							if (buttons[kButtonMirrorY].togglestate && (i > (vres >> 2)))
-			//							{
-			//								vwave[waveWritePtr][curline] = vwave[waveWritePtr][(vres >> 1) - i];	
-			//							}
-			//						}
-			//
-			//						vwave[waveWritePtr][(vres * 2) - (curline)] = vwave[waveWritePtr][curline];
-			//					}
-			//					else
-			//					{
-			//						hphase[waveWritePtr][curline] = samples_hphase[sampleReadPtr][i];
-			//						vwave[waveWritePtr][curline] = samples[sampleReadPtr][i];
-			//					}
-			//
-			//					vwave[waveWritePtr][curline + vres] = vwave[waveWritePtr][curline];	
-			//					//vwave[waveWritePtr][curline + vres + vres] = vwave[waveWritePtr][curline];	
-			//					//vwave[waveWritePtr][curline + vres + vres + vres] = vwave[waveWritePtr][curline];	
-			//					hphase[waveWritePtr][curline + vres] = hphase[waveWritePtr][curline];	
-			//					//hphase[waveWritePtr][curline + vres + vres] = hphase[waveWritePtr][curline];	
-			//					//hphase[waveWritePtr][curline + vres + vres + vres] = hphase[waveWritePtr][curline];	
-			//
-			//				}	
-			//			} else if(selected_bank == 2)
-			//			{
-			//				interlace_mode = 1;
-			//				for (uint32_t i = 0; i < (hres); i++)
-			//				{
-			//					if (!buttons[kButtonMirrorX].togglestate)
-			//					{
-			//						hwave[waveWritePtr][i] = (i * 1023) / hres;
-			//					} else {
-			//						if (i >= (hres >> 1))
-			//						{
-			//							hwave[waveWritePtr][i] = (((hres-i)<<1) * 1023) / hres;
-			//						} else {
-			//							hwave[waveWritePtr][i] = ((i<<1) * 1023) / hres;
-			//						}
-			//					}
-			//
-			//
-			//					//hwave[waveWritePtr][i] = hwave[waveWritePtr][i];
-			//					hwave[waveWritePtr][i + hres] = hwave[waveWritePtr][i];	
-			//					hwave[waveWritePtr][i + hres + hres] = hwave[waveWritePtr][i];	
-			//					hwave[waveWritePtr][i + hres + hres + hres] = hwave[waveWritePtr][i];	
-			//				}
-			//				for (uint32_t i = 0; i < (vres); i++)
-			//				{
-			//					if (i < (vres >> 1))
-			//					{
-			//						vwave[waveWritePtr][i] = ((i << 1) * 1023) / vres;					
-			//					}
-			//					else
-			//					{
-			//						vwave[waveWritePtr][i] = (((i-(vres>>1))<<1) * 1023) / vres;
-			//					}
-			//					vwave[waveWritePtr][i + vres] = vwave[waveWritePtr][i];													
-			//					hphase[waveWritePtr][i] = samples_hphase[sampleReadPtr][i];
-			//					hphase[waveWritePtr][i + vres] = hphase[waveWritePtr][i];	
-			//				}
-			//			}
-			//		}
-			
-			//for (uint32_t i = 0; i < vres; i++)
-			//{
-			//	samples_wave[sampleReadPtr][vres + vres - i] = samples_wave[sampleReadPtr][i];
-			//	samples_hphase_cv[sampleReadPtr][vres + vres - i] = samples_hphase_cv[sampleReadPtr][i];
-			//}
 
-				// Waveform generation here
-				for (uint32_t i = 0; i < hres; i++)
-				{
+			// H Waveform generation here
+			#pragma region HWAVE
+			for (uint32_t i = 0; i < hres; i++)
+			{
 					uint32_t sample_index;
 					sample_index = i;
-					float a = float(i) / float(hres);
+					float a = float(i) / float(hres); //normalized uv
 
+					// RealTime generated ones (every odd field are recalculated)
 					switch (selected_bank)
 					{
 
@@ -940,9 +776,12 @@ int main(void)
 					case 18:
 						lut[i] = uint16_t(perlin1d(a, (hphase_slider) * 0.75, 4)) & 1023;
 						break;
+					case 19:
+						lut[i] = (i * DAC_MAX_VALUE * (hphase_slider / (uint16_t)8) / vres) & 1023;
+						break;
 					}
 
-					if (state_scrollx)
+										if (state_scrollx)
 					{
 						sample_index = (sample_index + (hres - hphasecnt) + HPHASE_OFFSET) % (hres);
 					}
@@ -955,6 +794,7 @@ int main(void)
 						case 16:
 						case 17:
 						case 18:
+						case 19:
 							sample_index = (sample_index + (hres) + HPHASE_OFFSET) % (hres);
 							break;
 						default:
@@ -963,6 +803,7 @@ int main(void)
 						}
 					}
 
+					//|||||||||||||||||||||shared states between banks||||||||||||||||||||||
 					if (state_mirrorx)
 					{
 						if (sample_index >= (hres >> 1))
@@ -1006,6 +847,12 @@ int main(void)
 				hwave[waveWritePtr][i] = sample;
 				hwave[waveWritePtr][hres+i] = sample;
 			}
+			// H WAVE
+			#pragma endregion
+
+
+			// V Waveform generation here
+			#pragma region VWAVE
 			vphase_slider = vphase_slider & 0b1111111111110;
 			vphase_cv = vphase_cv & 0b1111111111110;
 			for (uint32_t i = 0; i < vres; i++)
@@ -1081,8 +928,13 @@ int main(void)
 				vwave[waveWritePtr][vres + vres - i] = sample;
 				hphase_cv[waveWritePtr][vres + vres - i] = sample_hphase;
 			}
+			//ends VWAVE
+			#pragma endregion
 
 
+
+			// interlaced stuff (not tested) TODO: ask Lars about it
+			#pragma region INTERLACED
 			switch (selected_bank)
 			{
 			case 7:	deinterlace_mode = 1; interlace_mode = 0; hphase_interlace_mode = 0; break;
@@ -1152,9 +1004,11 @@ int main(void)
 				}
 			}
 
+			#pragma endregion
+
 			waveRenderComplete = 1;	
 			Display_Refresh();
-			}
+		}
 	}	
 }
 
@@ -1168,28 +1022,78 @@ void GenerateLUT(uint8_t waveform)
 	//uint16_t fib_width = vres >> 2;
 	//uint16_t fib[5] = {  55 - 55, 89 - 55, 144 - 55, 233 - 55, 377 - 55};
 
+	//TODO: figure out why LUT is Vresolution
+
 	for (uint32_t i = 0; i < vres; i++)
 	{
 		float a = float(i) / float(vres);
-		float b = (a*a) * 1023.0;
+		float b = (a * a) * 1023.0;
 		float c = (a * 1023.0 * 2.0) - (b);
 
-		//uint16_t cur_fib_segment = i / fib_width;
-		//uint16_t cur_fib_interpolate_a = ((i % fib_width)*DAC_MAX_VALUE) / fib_width; 
-		//uint16_t fib_result = ((fib[cur_fib_segment]*1023)/322) + ((cur_fib_interpolate_a*(((fib[cur_fib_segment+1]-fib[cur_fib_segment])*DAC_MAX_VALUE)/322))/DAC_MAX_VALUE);
+		// uint16_t cur_fib_segment = i / fib_width;
+		// uint16_t cur_fib_interpolate_a = ((i % fib_width)*DAC_MAX_VALUE) / fib_width;
+		// uint16_t fib_result = ((fib[cur_fib_segment]*1023)/322) + ((cur_fib_interpolate_a*(((fib[cur_fib_segment+1]-fib[cur_fib_segment])*DAC_MAX_VALUE)/322))/DAC_MAX_VALUE);
 
-		switch (waveform)
+		switch (selected_bank)
 		{
-			case 0: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 1023; break;
-			case 1: lut[i] = uint16_t(c) & 1023; break;
-			case 2: lut[i] = uint16_t(b) & 1023; break;		
-			case 3: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 0b1111000000; break;
-			case 4: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 0b1110000000; break;
-			case 5: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 0b1100000000; break;
-			case 6:
-				lut[i] = perlin1d(a, 0.5, 4);
-				break;
-			}
+		case 0:
+			lut[i] = ((i * DAC_MAX_VALUE) / vres) & 1023;
+			break;
+		case 1:
+			lut[i] = uint16_t(c) & 1023;
+			break;
+		case 2:
+			lut[i] = uint16_t(b) & 1023;
+			break;
+		case 3:
+			lut[i] = ((i * DAC_MAX_VALUE) / vres) & 0b1111000000;
+			break;
+		case 4:
+			lut[i] = ((i * DAC_MAX_VALUE) / vres) & 0b1110000000;
+			break;
+		case 5:
+			lut[i] = ((i * DAC_MAX_VALUE) / vres) & 0b1100000000;
+			break;
+			//
+			//
+		case 8:
+			lut[i] = uint16_t(perlin1d(a, 5, 4)) & 1023;
+			break;
+		case 9:
+			lut[i] = uint16_t(perlin1d(b, 7, 4)) & 1023;
+			break;
+		case 10:
+			lut[i] = uint16_t(perlin1d(c, 20, 4)) & 1023;
+			break;
+		case 11:
+			lut[i] = uint16_t(perlin1d(a, 60, 4)) & 1023;
+			break;
+		case 12:
+			lut[i] = uint16_t(perlin1d(a, 100.0, 1)) & 1023;
+			break;
+		case 13:
+			lut[i] = uint16_t(perlin1d(b, 100.0, 2)) & 1023;
+			break;
+		case 14:
+			lut[i] = uint16_t(perlin1d(c, 100.0, 5)) & 1023;
+			break;
+
+		case 15:
+			lut[i] = uint16_t(perlin1d(a, (hphase_slider & 0b1111111111110) * 0.1, 4)) & 1023;
+			break;
+		case 16:
+			lut[i] = uint16_t(perlin1d(a, (hphase_slider)*0.1, 4)) & 1023;
+			break;
+		case 17:
+			lut[i] = uint16_t(perlin1d(a, (hphase_slider & 0b1111111111110), 4)) & 1023;
+			break;
+		case 18:
+			lut[i] = uint16_t(perlin1d(a, (hphase_slider), 4)) & 1023;
+			break;
+		case 19:
+			lut[i] = ((i * DAC_MAX_VALUE) / vres) & 1023;
+			break;
+		}
 	}
 }
 
