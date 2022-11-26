@@ -15,6 +15,7 @@ struct DiverMode
     virtual void OnOddField() = 0;
     virtual void OnInterruptFrameStart() = 0;
     virtual void OnInterruptHSync() = 0;
+
 protected:
     DiverUI* ui;
 };

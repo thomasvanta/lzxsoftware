@@ -1,15 +1,25 @@
 #include "main.h"
 #include "globals.h"
 
+#include <functional>
+
 #include "DiverUI.h"
 #include "modes/DiverMode.h"
 
 struct ModeDefault : DiverMode
 {
+    uint8_t deinterlace_mode;
+    std::function<uint8_t(uint8_t, uint8_t)> lookupTableBuilder;
+
+    ModeDefault(uint8_t deinterlace_mode, std::function<uint8_t(uint8_t, uint8_t)> lookupTableBuilder)
+    : deinterlace_mode(deinterlace_mode)
+    , lookupTableBuilder(lookupTableBuilder)
+    {
+    }
 
     void OnActivate()
     {
-
+    	GenerateLUT();
     }
 
     void OnInterruptHSync()
@@ -68,30 +78,35 @@ struct ModeDefault : DiverMode
             if (ui->state_invert)	{ sample_index = hres - 1 - sample_index; }
 
             uint32_t sample;
-            uint32_t sampleplusramp;
-            if ((lut[sample_index] + samples_wave[sampleReadPtr][sample_index]-512) > DAC_MAX_VALUE)
+            if (lookupTableBuilder != nullptr)
             {
-                sampleplusramp = DAC_MAX_VALUE;
-            } 
-            else if ((lut[sample_index] + samples_wave[sampleReadPtr][sample_index]) < 512)
-            {
-                sampleplusramp = 0;
+                uint32_t sampleplusramp;
+                if ((lut[sample_index] + samples_wave[sampleReadPtr][sample_index]-512) > DAC_MAX_VALUE)
+                {
+                    sampleplusramp = DAC_MAX_VALUE;
+                } 
+                else if ((lut[sample_index] + samples_wave[sampleReadPtr][sample_index]) < 512)
+                {
+                    sampleplusramp = 0;
+                }
+                else
+                {
+                    sampleplusramp = (lut[sample_index] + samples_wave[sampleReadPtr][sample_index]-512);
+                }
+                sample = sampleplusramp & 1023;
             }
-            else
-            {
-                sampleplusramp = (lut[sample_index] + samples_wave[sampleReadPtr][sample_index]-512);
+            else 
+            {	
+                sample = samples_wave[sampleReadPtr][sample_index];
             }
-            switch (ui->selected_bank)
-            {
-            case 6:		
-            case 7:	 sample = samples_wave[sampleReadPtr][sample_index]; break;	
-            default: sample = sampleplusramp&1023; break;
-            }				
+
             hwave[waveWritePtr][i] = sample;
             hwave[waveWritePtr][hres+i] = sample;
         }
+
         vphase_slider = vphase_slider & 0b1111111111110;
         vphase_cv = vphase_cv & 0b1111111111110;
+
         for (uint32_t i = 0; i < vres; i++)
         {
             uint32_t sample_index;	
@@ -119,39 +134,42 @@ struct ModeDefault : DiverMode
             uint32_t sample;
             uint32_t sample_hphase;
             sample_hphase = samples_hphase_cv[sampleReadPtr][sample_index];
-            uint32_t sampleplusramp;
-            if ((lut[sample_index] + samples_wave[sampleReadPtr][sample_index] - 512) > DAC_MAX_VALUE)
+
+            if (lookupTableBuilder != nullptr)
             {
-                sampleplusramp = DAC_MAX_VALUE;
+                uint32_t sampleplusramp;
+                if ((lut[sample_index] + samples_wave[sampleReadPtr][sample_index] - 512) > DAC_MAX_VALUE)
+                {
+                    sampleplusramp = DAC_MAX_VALUE;
+                }
+                else if ((lut[sample_index] + samples_wave[sampleReadPtr][sample_index]) < 512)
+                {
+                    sampleplusramp = 0;
+                }
+                else
+                {
+                    sampleplusramp = (lut[sample_index] + samples_wave[sampleReadPtr][sample_index] - 512);
+                }
+                
+                sample = sampleplusramp & 1023;
+            } else {
+                sample = samples_wave[sampleReadPtr][sample_index];
             }
-            else if ((lut[sample_index] + samples_wave[sampleReadPtr][sample_index]) < 512)
-            {
-                sampleplusramp = 0;
-            }
-            else
-            {
-                sampleplusramp = (lut[sample_index] + samples_wave[sampleReadPtr][sample_index] - 512);
-            }
-            switch (ui->selected_bank)
-            {
-            case 6:		
-            case 7:	 sample = samples_wave[sampleReadPtr][sample_index]; break;	
-            default: sample = sampleplusramp & 1023; break;
-            }				
+
             vwave[waveWritePtr][i] = sample;
             hphase_cv[waveWritePtr][i] = sample_hphase;
             vwave[waveWritePtr][vres + vres - i] = sample;
             hphase_cv[waveWritePtr][vres + vres - i] = sample_hphase;
         }
 
-
-        switch (ui->selected_bank)
-        {
-        case 7:	deinterlace_mode = 1; interlace_mode = 0; hphase_interlace_mode = 0; break;
-        default:	deinterlace_mode = 0; interlace_mode = 1; hphase_interlace_mode = 1; break;
+        if (deinterlace_mode) {
+            interlace_mode = 0; 
+            hphase_interlace_mode = 0;
+        } else {
+            interlace_mode = 1; 
+            hphase_interlace_mode = 1;
         }	
-        
-        
+                
         //Interlacing/deinterlacing here
         if(interlace_mode)
         {
@@ -216,33 +234,46 @@ struct ModeDefault : DiverMode
 
         waveRenderComplete = 1;	
     }
+
+protected:
+
+    // void GenerateLUT()
+    // {
+    //     if (lookupTableBuilder != nullptr)
+    //     {
+    //         for (uint32_t i = 0; i < vres; i++)
+    //         {
+    //             lut[i] = lookupTableBuilder(i, vres);
+    //         }
+    //     }
+    // }
+
+    void GenerateLUT()
+    {
+        uint8_t waveform = 0;
+
+       //uint16_t fib_width = vres >> 2;
+       //uint16_t fib[5] = {  55 - 55, 89 - 55, 144 - 55, 233 - 55, 377 - 55};
+
+       for (uint32_t i = 0; i < vres; i++)
+       {
+            float a = float(i) / float(vres);
+            float b = (a*a) * 1023.0;
+            float c = (a * 1023.0 * 2.0) - (b);
+
+            //uint16_t cur_fib_segment = i / fib_width;
+            //uint16_t cur_fib_interpolate_a = ((i % fib_width)*DAC_MAX_VALUE) / fib_width;
+            //uint16_t fib_result = ((fib[cur_fib_segment]*1023)/322) + ((cur_fib_interpolate_a*(((fib[cur_fib_segment+1]-fib[cur_fib_segment])*DAC_MAX_VALUE)/322))/DAC_MAX_VALUE);
+
+            switch (waveform)
+            {
+                case 0: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 1023; break;
+                case 1: lut[i] = uint16_t(c) & 1023; break;
+                case 2: lut[i] = uint16_t(b) & 1023; break;
+                case 3: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 0b1111000000; break;
+                case 4: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 0b1110000000; break;
+                case 5: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 0b1100000000; break;
+            }
+       }
+    }
 };
-
-
-void GenerateLUT(uint8_t waveform)
-{
-	//uint16_t fib_width = vres >> 2;
-	//uint16_t fib[5] = {  55 - 55, 89 - 55, 144 - 55, 233 - 55, 377 - 55};
-
-	for (uint32_t i = 0; i < vres; i++)
-	{
-		float a = float(i) / float(vres);
-		float b = (a*a) * 1023.0;
-		float c = (a * 1023.0 * 2.0) - (b);
-
-		//uint16_t cur_fib_segment = i / fib_width;
-		//uint16_t cur_fib_interpolate_a = ((i % fib_width)*DAC_MAX_VALUE) / fib_width; 
-		//uint16_t fib_result = ((fib[cur_fib_segment]*1023)/322) + ((cur_fib_interpolate_a*(((fib[cur_fib_segment+1]-fib[cur_fib_segment])*DAC_MAX_VALUE)/322))/DAC_MAX_VALUE);
-
-		switch (waveform)
-		{
-			case 0: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 1023; break;
-			case 1: lut[i] = uint16_t(c) & 1023; break;
-			case 2: lut[i] = uint16_t(b) & 1023; break;		
-			case 3: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 0b1111000000; break;
-			case 4: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 0b1110000000; break;
-			case 5: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 0b1100000000; break;
-
-		}
-	}
-}

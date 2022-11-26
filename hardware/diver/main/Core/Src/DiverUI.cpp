@@ -12,9 +12,8 @@
 #include <string>
 #include <stdio.h>
 
-extern "C" {
-    I2C_HandleTypeDef hi2c1;
-}
+extern "C" I2C_HandleTypeDef hi2c1;
+extern "C" void on_bank_changed();
 
 enum
 {
@@ -445,6 +444,11 @@ static const uint8_t gamma8[256] = {
 	255
 };
 
+DiverUI::DiverUI(uint8_t num_banks)
+: num_banks(num_banks)
+{
+
+}
 
 // not used, ADC is read during hsync
 void DiverUI::Pots_Poll(void)
@@ -534,7 +538,9 @@ void DiverUI::Buttons_Poll(void)
         trigger_enable_scrollx = 0;
         trigger_enable_scrolly = 0;
         trigger_enable_invert = 0;
-        SelectMode(0);
+		
+		selected_bank = 0;
+    	on_bank_changed();
 	}
 
 	trigger_display_mode = buttons[kButtonMap].value;
@@ -651,11 +657,10 @@ void DiverUI::Buttons_Poll(void)
     {
         if (bank_display_mode)
         {
-            selected_bank = (selected_bank + 1) % NUM_BANKS;	
-            GenerateLUT(selected_bank);
+			selected_bank = (selected_bank + 1) % num_banks;
+            on_bank_changed();
         }
         bank_display_counter = 0;	
-        
     }
     
     if (bank_display_counter < 91)
@@ -740,12 +745,6 @@ void DiverUI::Buttons_Poll(void)
         }
         //vphase_slider = vphasecnt;
     }
-}
-
-void DiverUI::SelectMode(uint8_t mode)
-{
-    selected_bank = mode;
-    GenerateLUT(mode);
 }
 
 void DiverUI::Display_Init()
@@ -970,9 +969,6 @@ void DiverUI::Display_Refresh()
 			
 			}		
 		}
-
-
-		
 	
 		leds[kLED_Bargraph1].brightness = ledbargraph[0];
 		leds[kLED_Bargraph2].brightness = ledbargraph[1];
@@ -994,13 +990,10 @@ void DiverUI::Display_Refresh()
 		leds[kLED_Bargraph18].brightness = ledbargraph[17];
 		leds[kLED_Bargraph19].brightness = ledbargraph[18];
 		leds[kLED_Bargraph20].brightness = ledbargraph[19];
-	
-
 
 		uint8_t curLED = 0;
 		for (int i = 0; i < 1; i++)
 		{
-			
 			for (int b = 0; b < 24; b++)
 			{
 				reg[b] = 0;
@@ -1179,18 +1172,18 @@ void DiverUI::Display_Refresh()
 				//leds[curLED].lastBrightness = leds[curLED].brightness;		
 			}	
 		}
-
-
 	}
+	
 	while (linecnt > 10)
 	{
 		//wait
 	}
+	
 	I2C_WriteRegister(display_address[0], 0xFE, 0XC5);                  		//Unlock
 	I2C_WriteRegister(display_address[0], 0xFD, 0X00);                     	//PG00 LED ON/OFF
+	
 	for(int k = 0 ; k < 6 ; k++)
 	{
-
 		if (ledupdatecnt == 0)
 		{
 			I2C_WriteRegister(display_address[0], k, reg[k]);
@@ -1207,7 +1200,6 @@ void DiverUI::Display_Refresh()
 		{
 			I2C_WriteRegister(display_address[0], k + 18, reg[k + 18]);
 		}
-			
 	}
 	ledupdatecnt = (ledupdatecnt + 1) % 4;
 }
@@ -1226,7 +1218,6 @@ void DiverUI::I2C_WriteRegister(uint32_t address, uint8_t byte1, uint8_t byte2)
 	i2cData[1] = byte2;
 	HAL_I2C_Master_Transmit(&hi2c1, address, i2cData, 2, 100);	
 }
-
 
 void DiverUI::OnInterruptHSync()
 {

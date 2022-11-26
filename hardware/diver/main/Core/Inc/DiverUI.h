@@ -6,11 +6,11 @@
 class DiverUI
 {
 public:
+    DiverUI(uint8_t num_banks);
 
     void Pots_Poll();
     void Buttons_Poll();
 
-    void SelectMode(uint8_t mode);
     void Display_Init();
     void Display_Refresh();
 
@@ -18,7 +18,9 @@ public:
 
     uint8_t frozen;
 
-    uint8_t selected_bank;    // 0 to 19
+    uint8_t selected_bank;
+    const uint8_t num_banks;
+
     uint8_t bank_display_mode;
     uint8_t bank_display_counter;
     

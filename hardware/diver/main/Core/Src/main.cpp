@@ -25,9 +25,41 @@ void SystemClock_Config(void);
 void data_transmitted_handler(DMA_HandleTypeDef *hdma);
 void transmit_error_handler(DMA_HandleTypeDef *hdma);
 
-DiverUI ui;
-//std::vector<DiverMode*> modes = { new ModeDefault() };
-ModeDefault mode;
+DiverMode* banks[] = { 
+	new ModeDefault(0, [](uint8_t i, uint8_t size) {
+		return ((i*DAC_MAX_VALUE) / size) & 1023;
+	}),
+	new ModeDefault(0, [](uint8_t i, uint8_t size) {
+		float a = float(i) / float(size);
+        float b = (a*a) * 1023.0;
+        float c = (a * 1023.0 * 2.0) - (b);
+        return uint16_t(c) & 1023;
+	}),
+	new ModeDefault(0, [](uint8_t i, uint8_t size) {
+		float a = float(i) / float(size);
+        float b = (a*a) * 1023.0;
+        return uint16_t(b) & 1023;
+	}),
+	new ModeDefault(0, [](uint8_t i, uint8_t size) {
+		return ((i*DAC_MAX_VALUE) / size) & 0b1111000000;
+	}),
+	new ModeDefault(0, [](uint8_t i, uint8_t size) {
+		return ((i*DAC_MAX_VALUE) / size) & 0b1110000000;
+	}),
+	new ModeDefault(0, [](uint8_t i, uint8_t size) {
+		return ((i*DAC_MAX_VALUE) / size) & 0b1100000000;
+	}),
+	new ModeDefault(0, nullptr),
+	new ModeDefault(1, nullptr),
+};
+
+template <class T, std::size_t N>
+constexpr std::size_t size(const T (&array)[N]) noexcept
+{
+    return N;
+}
+
+DiverUI ui((uint8_t)size(banks));
 
 int main(void)
 {
@@ -45,10 +77,11 @@ int main(void)
 	HAL_TIM_Base_MspInit(&htim1);
 	
 	ui.Display_Init();
-	// for (DiverMode* mode : modes) {
-	// 	mode->Init(&ui);
-	// }
-	mode.Init(&ui);
+	for (DiverMode* bank : banks) {
+		bank->Init(&ui);
+	}
+
+	banks[0]->OnActivate();
 
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);	
 	//HAL_NVIC_SetPriority(SysTick_IRQn, 4,0);
@@ -73,7 +106,6 @@ int main(void)
 
 	tim1period = 10;
 	hres = 524;
-	GenerateLUT(0);
 
 	htim1.hdma[TIM_DMA_ID_UPDATE]->XferCpltCallback = data_transmitted_handler;
 	htim1.hdma[TIM_DMA_ID_UPDATE]->XferErrorCallback = transmit_error_handler;
@@ -97,7 +129,7 @@ int main(void)
 			oddfield_event = 0;            // new odd field
 
 			ui.Buttons_Poll();
-			mode.OnOddField();
+			banks[ui.selected_bank]->OnOddField();
 			ui.Display_Refresh();
 		}		
 	}	
@@ -107,13 +139,18 @@ extern "C"
 {
 	void on_framestart()
 	{
-		mode.OnInterruptFrameStart();
+		banks[ui.selected_bank]->OnInterruptFrameStart();
 	}
 
 	void on_hsync()
 	{
-		//ui.OnInterruptHSync();
-		mode.OnInterruptHSync();
+		ui.OnInterruptHSync();
+		banks[ui.selected_bank]->OnInterruptHSync();
+	}
+
+	void on_bank_changed()
+	{
+		banks[ui.selected_bank]->OnActivate();
 	}
 }
 
