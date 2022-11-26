@@ -15,7 +15,7 @@
 
 #include "globals.h"
 #include "DiverUI.h"
-#include "modes/Default.h"
+#include "modes/BankLayout.h"
 
 #include <math.h>
 #include <string>
@@ -26,33 +26,6 @@ void SystemClock_Config(void);
 void data_transmitted_handler(DMA_HandleTypeDef *hdma);
 void transmit_error_handler(DMA_HandleTypeDef *hdma);
 
-DiverMode* banks[] = { 
-	new ModeDefault(0, [](uint32_t i, uint16_t size) {
-		return ((i*DAC_MAX_VALUE) / size) & 1023;
-	}),
-	new ModeDefault(0, [](uint32_t i, uint16_t size) {
-		float a = float(i) / float(size);
-        float b = (a*a) * 1023.0;
-        float c = (a * 1023.0 * 2.0) - (b);
-        return uint16_t(c) & 1023;
-	}),
-	new ModeDefault(0, [](uint32_t i, uint16_t size) {
-		float a = float(i) / float(size);
-        float b = (a*a) * 1023.0;
-        return uint16_t(b) & 1023;
-	}),
-	new ModeDefault(0, [](uint32_t i, uint16_t size) {
-		return ((i*DAC_MAX_VALUE) / size) & 0b1111000000;
-	}),
-	new ModeDefault(0, [](uint32_t i, uint16_t size) {
-		return ((i*DAC_MAX_VALUE) / size) & 0b1110000000;
-	}),
-	new ModeDefault(0, [](uint32_t i, uint16_t size) {
-		return ((i*DAC_MAX_VALUE) / size) & 0b1100000000;
-	}),
-	new ModeDefault(0, nullptr),
-	new ModeDefault(1, nullptr),
-};
 
 template <class T, std::size_t N>
 constexpr std::size_t size(const T (&array)[N]) noexcept
@@ -60,7 +33,28 @@ constexpr std::size_t size(const T (&array)[N]) noexcept
     return N;
 }
 
-DiverUI ui((uint8_t)size(banks));
+DiverUIState state(size(banks));
+DiverUI ui(state);
+
+extern "C"
+{
+	void on_framestart()
+	{
+		banks[state.selected_bank]->OnInterruptFrameStart(state);
+	}
+
+	void on_hsync()
+	{
+		ui.OnInterruptHSync();
+		banks[state.selected_bank]->OnInterruptHSync(state);
+	}
+
+	void on_bank_changed()
+	{
+		banks[state.selected_bank]->OnActivate(state);
+	}
+}
+
 
 int main(void)
 {
@@ -79,7 +73,7 @@ int main(void)
 	
 	ui.Display_Init();
 	for (DiverMode* bank : banks) {
-		bank->Init(&ui);
+		bank->OnInit();
 	}
 
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);	
@@ -105,7 +99,7 @@ int main(void)
 
 	hres = 524;
 
-	banks[0]->OnActivate();
+	on_bank_changed();
 
 	htim1.hdma[TIM_DMA_ID_UPDATE]->XferCpltCallback = data_transmitted_handler;
 	htim1.hdma[TIM_DMA_ID_UPDATE]->XferErrorCallback = transmit_error_handler;
@@ -129,29 +123,10 @@ int main(void)
 			oddfield_event = 0;            // new odd field
 
 			ui.Buttons_Poll();
-			banks[ui.selected_bank]->OnOddField();
+			banks[state.selected_bank]->OnOddField(state);
 			ui.Display_Refresh();
 		}		
 	}	
-}
-
-extern "C"
-{
-	void on_framestart()
-	{
-		banks[ui.selected_bank]->OnInterruptFrameStart();
-	}
-
-	void on_hsync()
-	{
-		ui.OnInterruptHSync();
-		banks[ui.selected_bank]->OnInterruptHSync();
-	}
-
-	void on_bank_changed()
-	{
-		banks[ui.selected_bank]->OnActivate();
-	}
 }
 
 void data_transmitted_handler(DMA_HandleTypeDef *hdma)

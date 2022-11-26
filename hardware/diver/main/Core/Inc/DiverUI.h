@@ -2,11 +2,14 @@
 #define __DIVERUI_H__
 
 #include <cstdint>
+#include "DiverUIState.h"
 
 class DiverUI
 {
 public:
-    DiverUI(uint8_t num_banks);
+    DiverUIState& state;
+
+    DiverUI(DiverUIState& state) : state(state) {};
 
     void Pots_Poll();
     void Buttons_Poll();
@@ -17,10 +20,6 @@ public:
     void OnInterruptHSync();
 
     uint8_t frozen;
-    uint8_t captureEnable;
-
-    uint8_t selected_bank;
-    const uint8_t num_banks;
 
     uint8_t bank_display_mode;
     uint8_t bank_display_counter;
@@ -37,18 +36,6 @@ public:
     uint8_t trigger_enable_scrollx;
     uint8_t trigger_enable_scrolly;
     uint8_t trigger_enable_invert;
-    
-    uint8_t state_mirrorx;
-    uint8_t state_mirrory;
-    uint8_t state_scrollx;
-    uint8_t state_scrolly;
-    uint8_t state_invert;
-
-    uint16_t hphase_slider;
-    uint16_t vphase_slider;
-    uint16_t vphase_cv;
-    uint16_t hphasecnt;
-    uint16_t vphasecnt;
 
 private:
     void TVP5150AM1_Setup();

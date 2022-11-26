@@ -1,22 +1,18 @@
-#include "main.h"
+#ifndef __DIVERMODE_H__
+#define __DIVERMODE_H__
 
-void GenerateLUT(uint8_t waveshape);
+#include "main.h"
+#include "DiverUIState.h"
 
 class DiverUI;
 
 struct DiverMode
 {
-    void Init(DiverUI* _ui) 
-    { 
-        ui = _ui;
-    };
-
-    virtual void OnActivate() = 0;
-    virtual void OnOddField() = 0;
-    virtual void OnInterruptFrameStart() = 0;
-    virtual void OnInterruptHSync() = 0;
-
-protected:
-    DiverUI* ui;
+    virtual void OnInit() {};
+    virtual void OnActivate(DiverUIState& state) = 0;
+    virtual void OnOddField(DiverUIState& state) = 0;
+    virtual void OnInterruptFrameStart(DiverUIState& state) = 0;
+    virtual void OnInterruptHSync(DiverUIState& state) = 0;
 };
 
+#endif

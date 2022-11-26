@@ -443,11 +443,6 @@ static const uint8_t gamma8[256] = {
 	255
 };
 
-DiverUI::DiverUI(uint8_t num_banks)
-: num_banks(num_banks)
-{
-
-}
 
 // not used, ADC is read during hsync
 void DiverUI::Pots_Poll(void)
@@ -538,7 +533,7 @@ void DiverUI::Buttons_Poll(void)
         trigger_enable_scrolly = 0;
         trigger_enable_invert = 0;
 		
-		selected_bank = 0;
+		state.selected_bank = 0;
     	on_bank_changed();
 	}
 
@@ -603,60 +598,67 @@ void DiverUI::Buttons_Poll(void)
 			if (buttons[i].rising == 1)  { buttons[i].togglestate = !buttons[i].togglestate; }	
 		}
 	}
+
     if (trigger_enable_freeze)
     {
         buttons[kButtonFreeze].rising = buttons[kTriggerIn].rising | buttons[kButtonFreeze].rising;	
     }
+
     if (trigger_enable_clear)
     {
         buttons[kButtonClear].rising = buttons[kTriggerIn].rising | buttons[kButtonClear].rising;	
     }
+
     if (trigger_enable_mirrorx)
     {
-        state_mirrorx = buttons[kButtonMirrorX].togglestate ^ buttons[kTriggerIn].value;
+        state.mirrorx = buttons[kButtonMirrorX].togglestate ^ buttons[kTriggerIn].value;
     }
     else
     {
-        state_mirrorx = buttons[kButtonMirrorX].togglestate;
+        state.mirrorx = buttons[kButtonMirrorX].togglestate;
     }
+
     if (trigger_enable_mirrory)
     {
-        state_mirrory = buttons[kButtonMirrorY].togglestate ^ buttons[kTriggerIn].value;
+        state.mirrory = buttons[kButtonMirrorY].togglestate ^ buttons[kTriggerIn].value;
     }
     else
     {
-        state_mirrory = buttons[kButtonMirrorY].togglestate;
+        state.mirrory = buttons[kButtonMirrorY].togglestate;
     }
+
     if (trigger_enable_invert)
     {
-        state_invert = buttons[kButtonInvert].togglestate ^ buttons[kTriggerIn].value;
+        state.invert = buttons[kButtonInvert].togglestate ^ buttons[kTriggerIn].value;
     }
     else
     {
-        state_invert = buttons[kButtonInvert].togglestate;
+        state.invert = buttons[kButtonInvert].togglestate;
     }
+
     if (trigger_enable_scrollx)
     {
-        state_scrollx = buttons[kButtonScrollX].togglestate ^ buttons[kTriggerIn].value;
+        state.scrollx = buttons[kButtonScrollX].togglestate ^ buttons[kTriggerIn].value;
     }
     else
     {
-        state_scrollx = buttons[kButtonScrollX].togglestate;			
+        state.scrollx = buttons[kButtonScrollX].togglestate;			
     }
+
     if (trigger_enable_scrolly)
     {
-        state_scrolly = buttons[kButtonScrollY].togglestate ^ buttons[kTriggerIn].value;
+        state.scrolly = buttons[kButtonScrollY].togglestate ^ buttons[kTriggerIn].value;
     }	
     else
     {
-        state_scrolly = buttons[kButtonScrollY].togglestate;
+        state.scrolly = buttons[kButtonScrollY].togglestate;
     }
 
     if (buttons[kButtonBankSelect].rising)
     {
         if (bank_display_mode)
         {
-			selected_bank = (selected_bank + 1) % num_banks;
+			state.selected_bank = (state.selected_bank + 1) % state.num_banks;
             on_bank_changed();
         }
         bank_display_counter = 0;	
@@ -679,68 +681,60 @@ void DiverUI::Buttons_Poll(void)
         bank_display_mode = 1;
     }
 
-    captureEnable = 0;
+    state.captureEnable = 0;
     if (buttons[kButtonFreeze].rising)
     {
         
         if (frozen == 1)
         {
-            captureEnable = 1;
-        }
-        else
-        {
-            captureEnable = 0;
+            state.captureEnable = 1;
         }
         frozen = 1;
     }
     else if (buttons[kButtonClear].rising)
     {
         frozen = 0;
-        captureEnable = 1;
+        state.captureEnable = 1;
     }
-    else if (frozen)
+    else if (!frozen)
     {
-        captureEnable = 0;
-    }
-    else
-    {
-        captureEnable = 1;
+        state.captureEnable = 1;
     }
 
-    if (state_scrollx)
+    if (state.scrollx)
     {
         //
 
         uint16_t speed;
-        if (hphase_slider >= (hres >> 1))
+        if (state.hphase_slider >= (hres >> 1))
         {
-            speed = hphase_slider - (hres >> 1);
+            speed = state.hphase_slider - (hres >> 1);
 
-            hphasecnt = (hphasecnt + (speed >> 2)) % hres;
+            state.hphasecnt = (state.hphasecnt + (speed >> 2)) % hres;
         }
         else
         {
-            speed = (hres >> 1) - hphase_slider;
+            speed = (hres >> 1) - state.hphase_slider;
 
-            hphasecnt = (hres + hphasecnt - (speed >> 2)) % hres;
+            state.hphasecnt = (hres + state.hphasecnt - (speed >> 2)) % hres;
         }
         //hphase_slider = hphasecnt;
         
     }
 
-    if (state_scrolly)
+    if (state.scrolly)
     {
         uint16_t speed;
-        if (vphase_slider >= (vres >> 1))
+        if (state.vphase_slider >= (vres >> 1))
         {
-            speed = vphase_slider - (vres >> 1);
-            vphasecnt = (vphasecnt + (speed >> 2)) % vres;
+            speed = state.vphase_slider - (vres >> 1);
+            state.vphasecnt = (state.vphasecnt + (speed >> 2)) % vres;
         }
         else
         {
-            speed = (vres >> 1) - vphase_slider;
+            speed = (vres >> 1) - state.vphase_slider;
 
-            vphasecnt = (vres + vphasecnt - (speed >> 2)) % vres;
+            state.vphasecnt = (vres + state.vphasecnt - (speed >> 2)) % vres;
         }
         //vphase_slider = vphasecnt;
     }
@@ -872,7 +866,7 @@ void DiverUI::Display_Refresh()
 		}
 		else
 		{
-			if (state_mirrorx)
+			if (state.mirrorx)
 			{
 				leds[kLED_MirrorX].brightness = 255;
 			}
@@ -880,7 +874,7 @@ void DiverUI::Display_Refresh()
 			{
 				leds[kLED_MirrorX].brightness = 0;
 			}
-			if (state_mirrory)
+			if (state.mirrory)
 			{
 				leds[kLED_MirrorY].brightness = 255;
 			}
@@ -888,7 +882,7 @@ void DiverUI::Display_Refresh()
 			{
 				leds[kLED_MirrorY].brightness = 0;
 			}
-			if (state_invert)
+			if (state.invert)
 			{
 				leds[kLED_Invert].brightness = 255;
 			}
@@ -897,7 +891,7 @@ void DiverUI::Display_Refresh()
 				leds[kLED_Invert].brightness = 0;
 			}
 
-			if (state_scrollx)
+			if (state.scrollx)
 			{
 				leds[kLED_ScrollX].brightness = 255;
 			}
@@ -905,7 +899,7 @@ void DiverUI::Display_Refresh()
 			{
 				leds[kLED_ScrollX].brightness = 0;
 			}
-			if (state_scrolly)
+			if (state.scrolly)
 			{
 				leds[kLED_ScrollY].brightness = 255;
 			}
@@ -913,7 +907,7 @@ void DiverUI::Display_Refresh()
 			{
 				leds[kLED_ScrollY].brightness = 0;
 			}
-			if (captureEnable)
+			if (state.captureEnable)
 			{
 				leds[kLED_Freeze].brightness = 0;
 			}
@@ -957,7 +951,7 @@ void DiverUI::Display_Refresh()
 			}
 			if (bank_display_mode)
 			{
-				if (selected_bank == i)
+				if (state.selected_bank == i)
 				{
 					ledbargraph[i] = 255;
 				}
@@ -1173,7 +1167,7 @@ void DiverUI::Display_Refresh()
 		}
 	}
 	
-	while (linecnt < (vres - 10))
+	while (linecnt < (vres - 3))
 	{
 		//wait
 	}
@@ -1376,7 +1370,7 @@ void DiverUI::OnInterruptHSync()
         {
             sample = MAX_SLIDER_VALUE;
         }
-        vphase_slider = (((((sample) * (vres+7)) / MAX_SLIDER_VALUE) + vphase_slider + vphase_slider + vphase_slider + vphase_slider + vphase_slider + vphase_slider + vphase_slider) >> 3); 
+        state.vphase_slider = (((((sample) * (vres+7)) / MAX_SLIDER_VALUE) + state.vphase_slider * 7) >> 3); 
     }
     else if (linecnt == 1)
     {
@@ -1429,7 +1423,7 @@ void DiverUI::OnInterruptHSync()
         {
             sample = MAX_SLIDER_VALUE;
         }
-        hphase_slider = (((((sample) * (hres+7)) / MAX_SLIDER_VALUE) + hphase_slider + hphase_slider + hphase_slider + hphase_slider + hphase_slider + hphase_slider + hphase_slider) >> 3); 
+        state.hphase_slider = (((((sample) * (hres+7)) / MAX_SLIDER_VALUE) + state.hphase_slider * 7) >> 3); 
         //hphase_slider = (((sample) * (hres*3)) / 1239); 
     }
     else if (linecnt == 2)
@@ -1479,11 +1473,11 @@ void DiverUI::OnInterruptHSync()
         }
         sample -= 361;
         sample = ((sample)*vres)/2035;
-        vphase_cv = ((vphase_cv + vphase_cv + vphase_cv + sample) >> 2); 	
+        state.vphase_cv = ((state.vphase_cv * 3 + sample) >> 2); 	
     } 
 
-	vphase_slider = vphase_slider & 0b1111111111110;
-    vphase_cv = vphase_cv & 0b1111111111110;
+	state.vphase_slider &= 0b1111111111110;
+    state.vphase_cv &= 0b1111111111110;
 
     //sConfig.Channel = ADC_CHANNEL_0;
     //sConfig.Rank = 2;
