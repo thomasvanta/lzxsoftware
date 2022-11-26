@@ -1482,6 +1482,9 @@ void DiverUI::OnInterruptHSync()
         vphase_cv = ((vphase_cv + vphase_cv + vphase_cv + sample) >> 2); 	
     } 
 
+	vphase_slider = vphase_slider & 0b1111111111110;
+    vphase_cv = vphase_cv & 0b1111111111110;
+
     //sConfig.Channel = ADC_CHANNEL_0;
     //sConfig.Rank = 2;
     //HAL_ADC_ConfigChannel(&hadc1, &sConfig);

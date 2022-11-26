@@ -33,7 +33,7 @@ struct ModeDefault : DiverMode
     {
         if (waveRenderComplete)
 		{
-			if (captureEnable)
+			if (ui->captureEnable)
 			{
 				sampleReadPtr = sampleWritePtr;	
 				sampleWritePtr = (sampleWritePtr + 1) % 4;						
@@ -59,11 +59,11 @@ struct ModeDefault : DiverMode
 
             if (ui->state_scrollx)
             {
-                sample_index = (sample_index + (hres-hphasecnt) + HPHASE_OFFSET) % (hres);	
+                sample_index = (sample_index + (hres - ui->hphasecnt) + HPHASE_OFFSET) % (hres);	
             }
             else
             {
-                sample_index = (sample_index + (hres-hphase_slider) + HPHASE_OFFSET) % (hres);
+                sample_index = (sample_index + (hres - ui->hphase_slider) + HPHASE_OFFSET) % (hres);
             }
             
             if (ui->state_mirrorx) { 
@@ -106,20 +106,17 @@ struct ModeDefault : DiverMode
             hwave[waveWritePtr][hres+i] = sample;
         }
 
-        vphase_slider = vphase_slider & 0b1111111111110;
-        vphase_cv = vphase_cv & 0b1111111111110;
-
         for (uint32_t i = 0; i < vres; i++)
         {
             uint32_t sample_index;	
             sample_index = i;
             if (ui->state_scrolly)
             {
-                sample_index = (sample_index + (vres - vphasecnt) + (vres - vphase_cv) + VPHASE_OFFSET) % (vres);	
+                sample_index = (sample_index + (vres - ui->vphasecnt) + (vres - ui->vphase_cv) + VPHASE_OFFSET) % (vres);	
             }
             else
             {
-                sample_index = (sample_index + (vres-vphase_slider) + (vres-vphase_cv) + VPHASE_OFFSET) % (vres);
+                sample_index = (sample_index + (vres - ui->vphase_slider) + (vres - ui->vphase_cv) + VPHASE_OFFSET) % (vres);
             }
             if (ui->state_mirrory) { 
                 if (sample_index >= (vres >> 1))

@@ -38,16 +38,6 @@ GLOBAL_EXTERN uint8_t waveWritePtr;
 GLOBAL_EXTERN uint8_t sampleReadPtr;
 GLOBAL_EXTERN uint8_t sampleWritePtr;
 GLOBAL_EXTERN uint8_t waveRenderComplete;
-GLOBAL_EXTERN uint8_t captureEnable;
-
-//Application variables
-GLOBAL_EXTERN uint16_t hphase_slider;
-GLOBAL_EXTERN uint16_t vphase_slider;
-GLOBAL_EXTERN uint16_t vphase_cv;
-GLOBAL_EXTERN uint16_t hphase;
-GLOBAL_EXTERN uint16_t vphase;
-GLOBAL_EXTERN uint16_t hphasecnt;
-GLOBAL_EXTERN uint16_t vphasecnt;
 
 GLOBAL_EXTERN uint16_t hres;
 GLOBAL_EXTERN uint16_t vres;
