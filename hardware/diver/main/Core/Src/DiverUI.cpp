@@ -1173,7 +1173,7 @@ void DiverUI::Display_Refresh()
 		}
 	}
 	
-	while (linecnt > 10)
+	while (linecnt < (vres - 10))
 	{
 		//wait
 	}
