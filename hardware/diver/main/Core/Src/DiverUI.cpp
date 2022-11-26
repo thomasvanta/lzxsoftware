@@ -1370,7 +1370,27 @@ void DiverUI::OnInterruptHSync()
         {
             sample = MAX_SLIDER_VALUE;
         }
-        state.vphase_slider = (((((sample) * (vres+7)) / MAX_SLIDER_VALUE) + state.vphase_slider * 7) >> 3); 
+		
+		uint16_t slider_value = state.vphase_slider;
+		if (buttons[kButtonClear].value)
+		{
+			slider_value = state.altB_slider;
+		}
+
+		slider_value = (((((sample) * (vres+7)) / MAX_SLIDER_VALUE) + slider_value * 7) >> 3); 
+
+		// Control alt param if Clear is held down
+		if (buttons[kButtonClear].value)
+		{
+			if (slider_value != state.vphase_slider)
+			{
+				state.altB_slider = slider_value;
+			}
+		} 
+		else 
+		{
+			state.vphase_slider = slider_value;
+		}
     }
     else if (linecnt == 1)
     {
@@ -1423,8 +1443,27 @@ void DiverUI::OnInterruptHSync()
         {
             sample = MAX_SLIDER_VALUE;
         }
-        state.hphase_slider = (((((sample) * (hres+7)) / MAX_SLIDER_VALUE) + state.hphase_slider * 7) >> 3); 
-        //hphase_slider = (((sample) * (hres*3)) / 1239); 
+
+		// Control alt param if Clear is held down
+		uint16_t slider_value = state.hphase_slider;
+		if (buttons[kButtonClear].value)
+		{
+			slider_value = state.altA_slider;
+		}
+
+        slider_value = (((((sample) * (hres+7)) / MAX_SLIDER_VALUE) + slider_value * 7) >> 3); 
+        
+		if (buttons[kButtonClear].value)
+		{
+			if (slider_value != state.hphase_slider)
+			{
+				state.altA_slider = slider_value;
+			}
+		} 
+		else 
+		{
+			state.hphase_slider = slider_value;
+		}
     }
     else if (linecnt == 2)
     {

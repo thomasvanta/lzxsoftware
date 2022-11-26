@@ -23,6 +23,9 @@ struct DiverUIState
     uint16_t vphase_cv;
     uint16_t hphasecnt;
     uint16_t vphasecnt;
+
+    uint16_t altA_slider;
+    uint16_t altB_slider;
 };
 
 #endif
