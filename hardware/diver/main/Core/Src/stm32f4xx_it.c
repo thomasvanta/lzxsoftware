@@ -37,51 +37,16 @@
 
 /* USER CODE BEGIN 0 */
 #include "main.h"
+#include "globals.h"
+
+// extern void on_hsync();
+// extern void on_framestart();
+
+ADC_ChannelConfTypeDef sConfig;
 
 uint8_t fieldflag;
-ADC_HandleTypeDef hadc1;
-TIM_HandleTypeDef htim1;
-ADC_ChannelConfTypeDef sConfig;
-//Video timing
-uint8_t hsync_event;
-uint8_t trigger_rising;
-uint8_t trigger_falling;
-uint8_t trigger_state;
-
-uint8_t evenfield_event;
-uint8_t oddfield_event;
-uint8_t field;
-uint8_t vsync;
-uint16_t linecnt;
-uint16_t lines_per_oddfield;
-uint16_t lines_per_evenfield;
-uint16_t lines_per_frame;
-uint32_t dropped_frames;
 uint32_t prelinecnt;
 
-//Memory buffers
-uint16_t samples_wave[NUM_BUFFERS][MAX_BUFFER_SIZE];
-uint16_t samples_hphase_cv[NUM_BUFFERS][MAX_BUFFER_SIZE];
-uint16_t hwave[NUM_BUFFERS][MAX_BUFFER_SIZE];
-uint16_t vwave[NUM_BUFFERS][MAX_BUFFER_SIZE];
-uint16_t hphase_cv[NUM_BUFFERS][MAX_BUFFER_SIZE];
-
-//Memory pointers and enables
-uint8_t waveReadPtr;
-uint8_t waveWritePtr;
-uint8_t sampleReadPtr;
-uint8_t sampleWritePtr;
-uint8_t waveRenderComplete;
-uint8_t captureEnable;
-
-//Application variables
-uint16_t hres;
-uint16_t vres;
-uint16_t hphase_slider;
-uint16_t vphase_slider;
-uint16_t vphase_cv;
-uint8_t interlace_mode;   // 0 = video sampling, 1 = audio sampling
-uint8_t frozen;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -404,8 +369,10 @@ void EXTI15_10_IRQHandler(void)
 		}
 
 		//samples_hphase[sampleWritePtr][linecnt - VBLANK] = (4095 - HAL_ADC_GetValue(&hadc1)) >> 2;
-		if(HAL_GPIO_ReadPin(TRIG_IN_GPIO_Port, TRIG_IN_Pin) && trigger_state == 0)  {  trigger_rising++; trigger_state = 1;} 
-		else if(!HAL_GPIO_ReadPin(TRIG_IN_GPIO_Port, TRIG_IN_Pin) && trigger_state == 1)  {  trigger_falling++; trigger_state = 0; } 
+		
+		// dewb todo
+		//if(HAL_GPIO_ReadPin(TRIG_IN_GPIO_Port, TRIG_IN_Pin) && trigger_state == 0)  {  trigger_rising++; trigger_state = 1;} 
+		//else if(!HAL_GPIO_ReadPin(TRIG_IN_GPIO_Port, TRIG_IN_Pin) && trigger_state == 1)  {  trigger_falling++; trigger_state = 0; } 
 		
 			
 			

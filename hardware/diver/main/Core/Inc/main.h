@@ -62,8 +62,6 @@
 #define MAX_SLIDER_VALUE 1220
 #define DAC_MAX_VALUE 1023
 #define NUM_SAMPLES 525
-#define NUM_BUFFERS 4
-#define MAX_BUFFER_SIZE (625*2)
 #define HRES 525
 #define HBLANK 0
 #define VRES 525
