@@ -18,10 +18,13 @@
 #define NUM_BUFFERS 4
 #define MAX_BUFFER_SIZE (625*2)
 
-C_EXTERN uint32_t tim1period;
-C_EXTERN ADC_HandleTypeDef hadc1;
 C_EXTERN TIM_HandleTypeDef htim1;
-C_EXTERN DMA_HandleTypeDef hdma_tim1_uev;
+
+#ifndef MAIN_CPP
+GLOBAL_EXTERN void on_framestart();
+GLOBAL_EXTERN void on_hsync();
+GLOBAL_EXTERN void on_bank_changed();
+#endif
 
 GLOBAL_EXTERN uint16_t samples_wave[NUM_BUFFERS][MAX_BUFFER_SIZE];
 GLOBAL_EXTERN uint16_t samples_hphase_cv[NUM_BUFFERS][MAX_BUFFER_SIZE];
@@ -45,12 +48,6 @@ GLOBAL_EXTERN uint16_t hphase;
 GLOBAL_EXTERN uint16_t vphase;
 GLOBAL_EXTERN uint16_t hphasecnt;
 GLOBAL_EXTERN uint16_t vphasecnt;
-GLOBAL_EXTERN uint8_t hphase_interlace_mode;      // 0 = video sampling, 1 = audio sampling
-GLOBAL_EXTERN uint8_t interlace_mode;     // 0 = video sampling, 1 = audio sampling
-GLOBAL_EXTERN uint8_t deinterlace_mode;      // 0 = video sampling, 1 = audio sampling
-
-//Memory buffers
-GLOBAL_EXTERN uint16_t lut[MAX_BUFFER_SIZE];
 
 GLOBAL_EXTERN uint16_t hres;
 GLOBAL_EXTERN uint16_t vres;

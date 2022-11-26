@@ -60,7 +60,7 @@
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 DMA_HandleTypeDef hdma_tim1_uev;
-uint32_t tim1period;
+uint32_t tim1period = 10;
 
 /* TIM1 init function */
 void MX_TIM1_Init(void)

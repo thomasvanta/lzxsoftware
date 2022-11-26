@@ -39,9 +39,6 @@
 #include "main.h"
 #include "globals.h"
 
-extern void on_hsync();
-extern void on_framestart();
-
 ADC_ChannelConfTypeDef sConfig;
 
 uint8_t fieldflag;

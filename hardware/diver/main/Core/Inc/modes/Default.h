@@ -6,12 +6,14 @@
 #include "DiverUI.h"
 #include "modes/DiverMode.h"
 
+uint16_t lut[MAX_BUFFER_SIZE];
+
 struct ModeDefault : DiverMode
 {
     uint8_t deinterlace_mode;
-    std::function<uint8_t(uint8_t, uint8_t)> lookupTableBuilder;
+    std::function<uint16_t(uint32_t, uint16_t)> lookupTableBuilder;
 
-    ModeDefault(uint8_t deinterlace_mode, std::function<uint8_t(uint8_t, uint8_t)> lookupTableBuilder)
+    ModeDefault(uint8_t deinterlace_mode, std::function<uint16_t(uint32_t, uint16_t)> lookupTableBuilder)
     : deinterlace_mode(deinterlace_mode)
     , lookupTableBuilder(lookupTableBuilder)
     {
@@ -162,13 +164,13 @@ struct ModeDefault : DiverMode
             hphase_cv[waveWritePtr][vres + vres - i] = sample_hphase;
         }
 
+        uint8_t hphase_interlace_mode = 1;  // 0 = video sampling, 1 = audio sampling
+        uint8_t interlace_mode = 1;         // 0 = video sampling, 1 = audio sampling
+
         if (deinterlace_mode) {
             interlace_mode = 0; 
             hphase_interlace_mode = 0;
-        } else {
-            interlace_mode = 1; 
-            hphase_interlace_mode = 1;
-        }	
+        }
                 
         //Interlacing/deinterlacing here
         if(interlace_mode)
@@ -237,43 +239,14 @@ struct ModeDefault : DiverMode
 
 protected:
 
-    // void GenerateLUT()
-    // {
-    //     if (lookupTableBuilder != nullptr)
-    //     {
-    //         for (uint32_t i = 0; i < vres; i++)
-    //         {
-    //             lut[i] = lookupTableBuilder(i, vres);
-    //         }
-    //     }
-    // }
-
     void GenerateLUT()
     {
-        uint8_t waveform = 0;
-
-       //uint16_t fib_width = vres >> 2;
-       //uint16_t fib[5] = {  55 - 55, 89 - 55, 144 - 55, 233 - 55, 377 - 55};
-
-       for (uint32_t i = 0; i < vres; i++)
-       {
-            float a = float(i) / float(vres);
-            float b = (a*a) * 1023.0;
-            float c = (a * 1023.0 * 2.0) - (b);
-
-            //uint16_t cur_fib_segment = i / fib_width;
-            //uint16_t cur_fib_interpolate_a = ((i % fib_width)*DAC_MAX_VALUE) / fib_width;
-            //uint16_t fib_result = ((fib[cur_fib_segment]*1023)/322) + ((cur_fib_interpolate_a*(((fib[cur_fib_segment+1]-fib[cur_fib_segment])*DAC_MAX_VALUE)/322))/DAC_MAX_VALUE);
-
-            switch (waveform)
+        if (lookupTableBuilder != nullptr)
+        {
+            for (uint32_t i = 0; i < vres; i++)
             {
-                case 0: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 1023; break;
-                case 1: lut[i] = uint16_t(c) & 1023; break;
-                case 2: lut[i] = uint16_t(b) & 1023; break;
-                case 3: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 0b1111000000; break;
-                case 4: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 0b1110000000; break;
-                case 5: lut[i] = ((i*DAC_MAX_VALUE) / vres) & 0b1100000000; break;
+                lut[i] = lookupTableBuilder(i, vres);
             }
-       }
+        }
     }
 };

@@ -8,6 +8,7 @@
 #include "stm32f4xx_hal.h"
 #include "adc.h"
 #include "dma.h"
+#include "i2c.h"
 #include "tim.h"
 //#include "usb_device.h"
 #include "gpio.h"
@@ -26,27 +27,27 @@ void data_transmitted_handler(DMA_HandleTypeDef *hdma);
 void transmit_error_handler(DMA_HandleTypeDef *hdma);
 
 DiverMode* banks[] = { 
-	new ModeDefault(0, [](uint8_t i, uint8_t size) {
+	new ModeDefault(0, [](uint32_t i, uint16_t size) {
 		return ((i*DAC_MAX_VALUE) / size) & 1023;
 	}),
-	new ModeDefault(0, [](uint8_t i, uint8_t size) {
+	new ModeDefault(0, [](uint32_t i, uint16_t size) {
 		float a = float(i) / float(size);
         float b = (a*a) * 1023.0;
         float c = (a * 1023.0 * 2.0) - (b);
         return uint16_t(c) & 1023;
 	}),
-	new ModeDefault(0, [](uint8_t i, uint8_t size) {
+	new ModeDefault(0, [](uint32_t i, uint16_t size) {
 		float a = float(i) / float(size);
         float b = (a*a) * 1023.0;
         return uint16_t(b) & 1023;
 	}),
-	new ModeDefault(0, [](uint8_t i, uint8_t size) {
+	new ModeDefault(0, [](uint32_t i, uint16_t size) {
 		return ((i*DAC_MAX_VALUE) / size) & 0b1111000000;
 	}),
-	new ModeDefault(0, [](uint8_t i, uint8_t size) {
+	new ModeDefault(0, [](uint32_t i, uint16_t size) {
 		return ((i*DAC_MAX_VALUE) / size) & 0b1110000000;
 	}),
-	new ModeDefault(0, [](uint8_t i, uint8_t size) {
+	new ModeDefault(0, [](uint32_t i, uint16_t size) {
 		return ((i*DAC_MAX_VALUE) / size) & 0b1100000000;
 	}),
 	new ModeDefault(0, nullptr),
@@ -69,10 +70,10 @@ int main(void)
 	HAL_Delay(250);
 	MX_GPIO_Init();
 	MX_DMA_Init();
+	MX_I2C1_Init();
 	MX_ADC1_Init();
 	//MX_USB_DEVICE_Init();
 
-	tim1period = 10;
 	MX_TIM1_Init();
 	HAL_TIM_Base_MspInit(&htim1);
 	
@@ -80,8 +81,6 @@ int main(void)
 	for (DiverMode* bank : banks) {
 		bank->Init(&ui);
 	}
-
-	banks[0]->OnActivate();
 
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);	
 	//HAL_NVIC_SetPriority(SysTick_IRQn, 4,0);
@@ -104,8 +103,9 @@ int main(void)
 		vres = 524;
 	}
 
-	tim1period = 10;
 	hres = 524;
+
+	banks[0]->OnActivate();
 
 	htim1.hdma[TIM_DMA_ID_UPDATE]->XferCpltCallback = data_transmitted_handler;
 	htim1.hdma[TIM_DMA_ID_UPDATE]->XferErrorCallback = transmit_error_handler;

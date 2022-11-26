@@ -13,7 +13,6 @@
 #include <stdio.h>
 
 extern "C" I2C_HandleTypeDef hi2c1;
-extern "C" void on_bank_changed();
 
 enum
 {
@@ -1335,8 +1334,6 @@ void DiverUI::OnInterruptHSync()
     }
 
     //samples_hphase[sampleWritePtr][linecnt - VBLANK] = (4095 - HAL_ADC_GetValue(&hadc1)) >> 2;
-    
-    // TODO dewb -- figure out what to do with these two lines
     if(HAL_GPIO_ReadPin(TRIG_IN_GPIO_Port, TRIG_IN_Pin) && trigger_state == 0)  {  trigger_rising++; trigger_state = 1;} 
     else if(!HAL_GPIO_ReadPin(TRIG_IN_GPIO_Port, TRIG_IN_Pin) && trigger_state == 1)  {  trigger_falling++; trigger_state = 0; } 
     
