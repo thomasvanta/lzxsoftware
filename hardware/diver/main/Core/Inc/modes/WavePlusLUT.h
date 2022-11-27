@@ -10,7 +10,8 @@ uint16_t lut[MAX_BUFFER_SIZE];
 
 struct WavePlusLUT : DiverMode
 {
-    typedef enum {
+    typedef enum
+    {
         Constant = 0,
         PerFrame,
         PerLine
@@ -35,14 +36,13 @@ struct WavePlusLUT : DiverMode
     LookupTableBuilder lookupTableBuilder;
 
     WavePlusLUT(Options options, LookupTableBuilder lookupTableBuilder)
-    : options(options)
-    , lookupTableBuilder(lookupTableBuilder)
+        : options(options), lookupTableBuilder(lookupTableBuilder)
     {
     }
 
     void OnActivate(DiverUIState& state)
     {
-    	if (options.updateStyle == UpdateStyle::Constant)
+        if (options.updateStyle == UpdateStyle::Constant)
         {
             GenerateLUT(state);
         }
@@ -59,21 +59,21 @@ struct WavePlusLUT : DiverMode
     void OnInterruptFrameStart(DiverUIState& state)
     {
         if (waveRenderComplete)
-		{
-			if (state.captureEnable)
-			{
-				sampleReadPtr = sampleWritePtr;	
-				sampleWritePtr = (sampleWritePtr + 1) % 4;						
-			}
-				
-			waveReadPtr = waveWritePtr;	
-			waveWritePtr = (waveWritePtr + 1) % 4;	
-			waveRenderComplete = 0;
-		}
-		else
-		{
-			dropped_frames++;
-		}
+        {
+            if (state.captureEnable)
+            {
+                sampleReadPtr = sampleWritePtr;
+                sampleWritePtr = (sampleWritePtr + 1) % 4;
+            }
+
+            waveReadPtr = waveWritePtr;
+            waveWritePtr = (waveWritePtr + 1) % 4;
+            waveRenderComplete = 0;
+        }
+        else
+        {
+            dropped_frames++;
+        }
     }
 
     void OnOddField(DiverUIState& state)
@@ -83,26 +83,26 @@ struct WavePlusLUT : DiverMode
             GenerateLUT(state);
         }
 
-        //Waveform generation here
-        for(uint32_t i = 0 ; i < hres ; i++)
+        // Waveform generation here
+        for (uint32_t i = 0; i < hres; i++)
         {
             uint32_t sample_index;
             sample_index = i;
 
             if (state.scrollx)
             {
-                sample_index = (sample_index + (hres - state.hphasecnt) + HPHASE_OFFSET) % (hres);	
+                sample_index = (sample_index + (hres - state.hphasecnt) + HPHASE_OFFSET) % (hres);
             }
             else
             {
                 sample_index = (sample_index + (hres - state.hphase_slider) + HPHASE_OFFSET) % (hres);
             }
-            
-            if (state.mirrorx) 
-            { 
+
+            if (state.mirrorx)
+            {
                 if (sample_index >= (hres >> 1))
                 {
-                    sample_index = ((hres >> 1) - (sample_index + 1 - (hres >> 1))) << 1; 	
+                    sample_index = ((hres >> 1) - (sample_index + 1 - (hres >> 1))) << 1;
                 }
                 else
                 {
@@ -110,53 +110,56 @@ struct WavePlusLUT : DiverMode
                 }
             }
 
-            if (state.invert)	{ sample_index = hres - 1 - sample_index; }
+            if (state.invert)
+            {
+                sample_index = hres - 1 - sample_index;
+            }
 
             uint32_t sample;
             if (lookupTableBuilder != nullptr)
             {
                 uint32_t sampleplusramp;
-                if ((lut[sample_index] + samples_wave[sampleReadPtr][sample_index]-512) > DAC_MAX_VALUE)
+                if ((lut[sample_index] + samples_wave[sampleReadPtr][sample_index] - 512) > DAC_MAX_VALUE)
                 {
                     sampleplusramp = DAC_MAX_VALUE;
-                } 
+                }
                 else if ((lut[sample_index] + samples_wave[sampleReadPtr][sample_index]) < 512)
                 {
                     sampleplusramp = 0;
                 }
                 else
                 {
-                    sampleplusramp = (lut[sample_index] + samples_wave[sampleReadPtr][sample_index]-512);
+                    sampleplusramp = (lut[sample_index] + samples_wave[sampleReadPtr][sample_index] - 512);
                 }
                 sample = sampleplusramp & 1023;
             }
-            else 
-            {	
+            else
+            {
                 sample = samples_wave[sampleReadPtr][sample_index];
             }
 
             hwave[waveWritePtr][i] = sample;
-            hwave[waveWritePtr][hres+i] = sample;
+            hwave[waveWritePtr][hres + i] = sample;
         }
 
         for (uint32_t i = 0; i < vres; i++)
         {
-            uint32_t sample_index;	
+            uint32_t sample_index;
             sample_index = i;
             if (state.scrolly)
             {
-                sample_index = (sample_index + (vres - state.vphasecnt) + (vres - state.vphase_cv) + VPHASE_OFFSET) % (vres);	
+                sample_index = (sample_index + (vres - state.vphasecnt) + (vres - state.vphase_cv) + VPHASE_OFFSET) % (vres);
             }
             else
             {
                 sample_index = (sample_index + (vres - state.vphase_slider) + (vres - state.vphase_cv) + VPHASE_OFFSET) % (vres);
             }
 
-            if (state.mirrory) 
-            { 
+            if (state.mirrory)
+            {
                 if (sample_index >= (vres >> 1))
                 {
-                    sample_index = ((vres >> 1) - (sample_index + 1 - (vres >> 1))) << 1; 	
+                    sample_index = ((vres >> 1) - (sample_index + 1 - (vres >> 1))) << 1;
                 }
                 else
                 {
@@ -164,8 +167,8 @@ struct WavePlusLUT : DiverMode
                 }
             }
             if (state.invert)
-            { 
-                sample_index = vres - 1 - sample_index; 
+            {
+                sample_index = vres - 1 - sample_index;
             }
 
             uint32_t sample;
@@ -187,9 +190,11 @@ struct WavePlusLUT : DiverMode
                 {
                     sampleplusramp = (lut[sample_index] + samples_wave[sampleReadPtr][sample_index] - 512);
                 }
-                
+
                 sample = sampleplusramp & 1023;
-            } else {
+            }
+            else
+            {
                 sample = samples_wave[sampleReadPtr][sample_index];
             }
 
@@ -199,16 +204,17 @@ struct WavePlusLUT : DiverMode
             hphase_cv[waveWritePtr][vres + vres - i] = sample_hphase;
         }
 
-        uint8_t hphase_interlace_mode = 1;  // 0 = video sampling, 1 = audio sampling
-        uint8_t interlace_mode = 1;         // 0 = video sampling, 1 = audio sampling
+        uint8_t hphase_interlace_mode = 1; // 0 = video sampling, 1 = audio sampling
+        uint8_t interlace_mode = 1;        // 0 = video sampling, 1 = audio sampling
 
-        if (options.deinterlace_mode) {
-            interlace_mode = 0; 
+        if (options.deinterlace_mode)
+        {
+            interlace_mode = 0;
             hphase_interlace_mode = 0;
         }
-                
-        //Interlacing/deinterlacing here
-        if(interlace_mode)
+
+        // Interlacing/deinterlacing here
+        if (interlace_mode)
         {
             uint16_t samples_interlaced[vres];
             for (uint32_t i = 0; i < vres; i++)
@@ -222,7 +228,7 @@ struct WavePlusLUT : DiverMode
                     samples_interlaced[i] = vwave[waveWritePtr][((i - (vres >> 1)) << 1) + 1];
                 }
             }
-            
+
             for (uint32_t i = 0; i < vres; i++)
             {
                 vwave[waveWritePtr][i] = samples_interlaced[i];
@@ -242,7 +248,7 @@ struct WavePlusLUT : DiverMode
                     samples_interlaced[i] = hphase_cv[waveWritePtr][((i - (vres >> 1)) << 1) + 1];
                 }
             }
-            
+
             for (uint32_t i = 0; i < vres; i++)
             {
                 hphase_cv[waveWritePtr][i] = samples_interlaced[i];
@@ -253,7 +259,7 @@ struct WavePlusLUT : DiverMode
             uint16_t samples_deinterlaced[hres];
             for (uint32_t i = 0; i < hres; i++)
             {
-                if (i &0b1) //even pixel
+                if (i & 0b1) // even pixel
                 {
                     samples_deinterlaced[i] = hwave[waveWritePtr][(i >> 1) + (hres >> 1)];
                 }
@@ -262,23 +268,27 @@ struct WavePlusLUT : DiverMode
                     samples_deinterlaced[i] = hwave[waveWritePtr][(i >> 1)];
                 }
             }
-            
+
             for (uint32_t i = 0; i < hres; i++)
             {
                 hwave[waveWritePtr][i] = samples_deinterlaced[i];
             }
         }
 
-        waveRenderComplete = 1;	
+        waveRenderComplete = 1;
     }
 
-protected:
-
+  protected:
     void GenerateLUT(DiverUIState& state)
     {
         if (lookupTableBuilder != nullptr)
         {
-            Lookup pixel { .i = 0, .linecnt = linecnt, .hres = hres, .vres = vres,  };
+            Lookup pixel{
+                .i = 0,
+                .linecnt = linecnt,
+                .hres = hres,
+                .vres = vres,
+            };
             for (uint32_t i = 0; i < vres; i++)
             {
                 pixel.i = i;

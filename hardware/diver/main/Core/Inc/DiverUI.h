@@ -9,7 +9,7 @@ class DiverUI
 public:
     DiverUIState& state;
 
-    DiverUI(DiverUIState& state) : state(state) {};
+    DiverUI(DiverUIState& state) : state(state){};
 
     void Pots_Poll();
     void Buttons_Poll();
@@ -23,7 +23,7 @@ public:
 
     uint8_t bank_display_mode;
     uint8_t bank_display_counter;
-    
+
     uint8_t trigger_rising;
     uint8_t trigger_falling;
     uint8_t trigger_state;
@@ -42,7 +42,7 @@ private:
     void I2C_WriteRegister(uint32_t address, uint8_t byte1, uint8_t byte2);
 
     uint16_t ledupdatecnt;
-    uint8_t reg[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    uint8_t reg[24] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 };
 
 #endif
