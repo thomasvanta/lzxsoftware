@@ -13,9 +13,9 @@
 //#include "usb_device.h"
 #include "gpio.h"
 
-#include "globals.h"
 #include "DiverUI.h"
-#include "modes/BankLayout.h"
+#include "banks/BankLayout.h"
+#include "globals.h"
 
 #include <math.h>
 #include <string>
@@ -70,7 +70,7 @@ int main(void)
     HAL_TIM_Base_MspInit(&htim1);
 
     ui.Display_Init();
-    for (DiverMode* bank : banks)
+    for (auto bank : banks)
     {
         bank->OnInit();
     }

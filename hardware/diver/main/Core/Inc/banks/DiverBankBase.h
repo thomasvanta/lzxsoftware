@@ -1,12 +1,9 @@
-#ifndef __DIVERMODE_H__
-#define __DIVERMODE_H__
+#ifndef __DIVERBANKBASE_H__
+#define __DIVERBANKBASE_H__
 
-#include "main.h"
 #include "DiverUIState.h"
 
-class DiverUI;
-
-struct DiverMode
+struct DiverBankBase
 {
     virtual void OnInit(){};
     virtual void OnActivate(DiverUIState& state) = 0;

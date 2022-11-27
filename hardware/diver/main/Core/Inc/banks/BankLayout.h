@@ -1,7 +1,6 @@
-#include "DiverMode.h"
 #include "WavePlusLUT.h"
 
-DiverMode* banks[] = {
+DiverBankBase* banks[] = {
     // Factory Bank 1 - Linear Ramp
     new WavePlusLUT(
         WavePlusLUT::Options{

@@ -6,7 +6,6 @@
 #include "gpio.h"
 
 #include "globals.h"
-#include "modes/DiverMode.h"
 
 #include <math.h>
 #include <string>

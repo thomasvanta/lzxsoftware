@@ -1,14 +1,13 @@
-#include "main.h"
 #include "globals.h"
+#include "main.h"
 
 #include <functional>
 
-#include "DiverUI.h"
-#include "DiverMode.h"
+#include "DiverBankBase.h"
 
 uint16_t lut[MAX_BUFFER_SIZE];
 
-struct WavePlusLUT : DiverMode
+struct WavePlusLUT : DiverBankBase
 {
     typedef enum
     {
