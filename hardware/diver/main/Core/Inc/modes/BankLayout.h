@@ -75,8 +75,9 @@ DiverMode* banks[] = {
         }, 
         [](WavePlusLUT::Lookup& l, DiverUIState& state) {
             uint16_t wavelength = uint16_t(hres * (31.0*state.altA_slider/MAX_SLIDER_VALUE + 1)/32.0);
-            uint16_t pulsewidth = uint16_t(wavelength*2.0*state.altB_slider/MAX_SLIDER_VALUE);
-            return ((l.i % wavelength) > pulsewidth) * DAC_MAX_VALUE;
+            uint16_t pulsewidth = uint16_t(wavelength*2.0*state.altB_slider/MAX_SLIDER_VALUE) + 1;
+            bool on = l.i % wavelength < pulsewidth;
+            return (on != state.invert) * DAC_MAX_VALUE;
         }
     )
 };
