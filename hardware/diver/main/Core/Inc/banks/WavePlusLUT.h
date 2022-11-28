@@ -1,3 +1,6 @@
+#ifndef __WAVEPLUSLUT_H__
+#define __WAVEPLUSLUT_H__
+
 #include "globals.h"
 #include "main.h"
 
@@ -296,3 +299,5 @@ struct WavePlusLUT : DiverBankBase
         }
     }
 };
+
+#endif

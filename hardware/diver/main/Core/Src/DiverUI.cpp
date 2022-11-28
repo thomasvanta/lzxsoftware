@@ -772,7 +772,7 @@ void DiverUI::Buttons_Poll(void)
         {
             speed = state.hphase_slider - (hres >> 1);
 
-            state.hphasecnt = (state.hphasecnt + (speed >> 2)) % hres;
+            state.hphasecnt = (state.hphasecnt + (speed >> 2)) % hres; // 6 is very slow, 8 wont move
         }
         else
         {
@@ -789,7 +789,7 @@ void DiverUI::Buttons_Poll(void)
         if (state.vphase_slider >= (vres >> 1))
         {
             speed = state.vphase_slider - (vres >> 1);
-            state.vphasecnt = (state.vphasecnt + (speed >> 2)) % vres;
+            state.vphasecnt = (state.vphasecnt + (speed >> 2)) % vres; // 1 is very fast
         }
         else
         {

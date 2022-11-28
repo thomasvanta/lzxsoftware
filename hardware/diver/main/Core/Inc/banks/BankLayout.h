@@ -1,5 +1,8 @@
 #include "WavePlusLUT.h"
 
+#include "VanTaBanks.h"
+//#include "defaultBanks.h"
+
 DiverBankBase* banks[] = {
     // Factory Bank 1 - Linear Ramp
     new WavePlusLUT(
@@ -76,4 +79,8 @@ DiverBankBase* banks[] = {
             bool on = l.i % wavelength < pulsewidth;
             return (on != state.invert) * DAC_MAX_VALUE;
         }
-    )};
+    ),
+    // Bank 8 - Dynamic Noise
+    banksVanTa.PerlinDynamic
+
+};
