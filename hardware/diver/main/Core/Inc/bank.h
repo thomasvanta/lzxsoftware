@@ -7,6 +7,17 @@ extern "C"
 {
 #endif
 
+    class bank
+    {
+    private:
+        /* data */
+    public:
+        bank(/* args */);
+        ~bank();
+        uint32_t generateStaticLUT();
+        uint32_t generateRealTimeLUT();
+    };
+
 #ifdef __cplusplus
 }
 #endif

@@ -2,15 +2,20 @@
 
 //idea for an OOP approach to Diver
 //a Bank is an object
+//different people can create files with collections of objects inherited from bank
+//for example: lzx_banks.h (7 original banks), dewb_banks.h (some extra banks)
 //a NUM_BANKS (main.h) number of banks get initialized at region SETUP of main.cpp
-//in the same region banks are initializated
+//in the same region banks are initializated and assigned to a ... n array maybe?
 //bank objects have functions with a 'State' struct as parameter, containing all info needed (buttons, sliders....)
 //each bank implements generateStaticLUT and optionally generateRealTimeLUT functions
 //
 // main would be something like this:
 
 // main{
-//  SETUP
+//  SETUP 
+//    banks[0] = lzx::bankRamp();
+//    banks[1] = dewb::bankNoise()
+//    .....
 //  Buttons_Poll()
 //  switch bank
 //   case 1: banks[0].generateStaticLUT
@@ -33,20 +38,9 @@
 // display_refresh()
 //}
 
-
-class bank
-{
-private:
-    /* data */
-public:
-    bank(/* args */);
-    ~bank();
-    uint32_t generateStaticLUT();
-    uint32_t generateRealTimeLUT();
-};
-
 bank::bank(/* args */)
 {
+    //args for example initial SEED for randomness...
 }
 
 bank::~bank()
@@ -55,8 +49,10 @@ bank::~bank()
 
 uint32_t bank::generateStaticLUT(/* state Struct */)
 {
+    return 1;
 }
 
 uint32_t bank::generateRealTimeLUT(/* state Struct */)
 {
+    return 0;
 }
