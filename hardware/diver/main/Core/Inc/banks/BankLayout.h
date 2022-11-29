@@ -1,7 +1,7 @@
 #include "WavePlusLUT.h"
 
-#include "VanTaBanks.h"
-//#include "defaultBanks.h"
+#include "perlin.h"
+#include <cmath>
 
 DiverBankBase* banks[] = {
     // Factory Bank 1 - Linear Ramp
@@ -94,7 +94,20 @@ DiverBankBase* banks[] = {
             return (on != state.invert) * DAC_MAX_VALUE;
         }
     ),
-    // Bank 8 - Dynamic Noise
-    banksVanTa.PerlinDynamic
-
-};
+    // Bank 8 - Dynamic Perlin Noise
+    new WavePlusLUT(
+        {.altA_default = 0.1f,
+         .altB_default = 0.1f,
+         .scrollrange_default = ScrollRange::Tortoise,
+         .deinterlace_mode = 0,
+         .update_style = WavePlusLUT::UpdateStyle::PerFrame},
+        [](WavePlusLUT::Lookup& l, DiverUIState& state)
+        {
+            float pos = float(l.i) / float(l.vres);
+            float freq = (64 * state.param_altA + 0.1) / MAX_SLIDER_VALUE;
+            int depth = int(12 * state.param_altB / MAX_SLIDER_VALUE + 1);
+            float n = perlin1d(pos, freq, depth, 4.0);
+            float val = state.invert ? std::abs(1 - n) : n;
+            return val * DAC_MAX_VALUE;
+        }
+    )};
