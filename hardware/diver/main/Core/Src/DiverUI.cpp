@@ -561,8 +561,8 @@ void DiverUI::Display_Init()
 
 void DiverUI::Pots_Init()
 {
-    hSlider.Init(&state.param_hphase, &state.param_altA, 1.0, 0.0);
-    vSlider.Init(&state.param_vphase, &state.param_altB, 1.0, 0.0);
+    hSlider.Init(&state.param_hphase, &state.param_altA, 1.0f, 0.0f);
+    vSlider.Init(&state.param_vphase, &state.param_altB, 1.0f, 0.0f);
 }
 
 void DiverUI::Display_Refresh()
@@ -1205,7 +1205,7 @@ void DiverUI::OnInterruptHSync()
             sample = MAX_SLIDER_VALUE;
         }
 
-        vSlider.ProcessControlRate(1.0 * sample / MAX_SLIDER_VALUE);
+        vSlider.ProcessControlRate(1.0f * sample / MAX_SLIDER_VALUE);
         vSlider.ProcessUIRate();
         state.vphase_slider = uint16_t(state.param_vphase * vres);
     }
@@ -1261,9 +1261,9 @@ void DiverUI::OnInterruptHSync()
             sample = MAX_SLIDER_VALUE;
         }
 
-        hSlider.ProcessControlRate(1.0 - (1.0 * sample / MAX_SLIDER_VALUE));
+        hSlider.ProcessControlRate(1.0f - (1.0f * sample / MAX_SLIDER_VALUE));
         hSlider.ProcessUIRate();
-        state.hphase_slider = uint16_t((1.0 - state.param_hphase) * hres);
+        state.hphase_slider = uint16_t((1.0f - state.param_hphase) * hres);
     }
     else if (linecnt == 2)
     {
