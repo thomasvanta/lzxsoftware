@@ -437,18 +437,6 @@ static const uint8_t gamma8[256] = {
     252,
     255};
 
-// not used, ADC is read during hsync
-void DiverUI::Pots_Poll(void)
-{
-    HAL_ADC_Start(&hadc1);
-    for (uint32_t i = 0; i < NUM_POTENTIOMETERS; i++)
-    {
-        HAL_ADC_PollForConversion(&hadc1, 10);
-        pots[i].value = ((4095 - ((HAL_ADC_GetValue(&hadc1) * POTENTIOMETER_ADC_MAX) >> 11)) + pots[i].value) >> 1;
-    }
-    HAL_ADC_Stop(&hadc1);
-}
-
 void DiverUI::Buttons_Poll(void)
 {
     // Store previous values
@@ -594,6 +582,19 @@ void DiverUI::Buttons_Poll(void)
 
         state.selected_bank = 0;
         on_bank_changed();
+    }
+
+    if (buttons[kButtonClear].rising)
+    {
+        // Enable alt parameters on sliders
+        hSlider.Lock();
+        vSlider.Lock();
+    }
+    else if (buttons[kButtonClear].falling)
+    {
+        // Release sliders into catchup mode
+        hSlider.Unlock();
+        vSlider.Unlock();
     }
 
     trigger_display_mode = buttons[kButtonMap].value;
@@ -801,6 +802,12 @@ void DiverUI::Buttons_Poll(void)
     }
 }
 
+void DiverUI::Init()
+{
+    Pots_Init();
+    Display_Init();
+}
+
 void DiverUI::Display_Init()
 {
     TVP5150AM1_Setup();
@@ -854,6 +861,12 @@ void DiverUI::Display_Init()
             I2C_WriteRegister(display_address[i], display_pwm_startreg[k] + 17, 255);
         }
     }
+}
+
+void DiverUI::Pots_Init()
+{
+    hSlider.Init(&state.param_hphase, &state.param_altA, 1.0, 0.0);
+    vSlider.Init(&state.param_vphase, &state.param_altB, 1.0, 0.0);
 }
 
 void DiverUI::Display_Refresh()
@@ -1320,6 +1333,18 @@ void DiverUI::I2C_WriteRegister(uint32_t address, uint8_t byte1, uint8_t byte2)
     HAL_I2C_Master_Transmit(&hi2c1, address, i2cData, 2, 100);
 }
 
+void DiverUI::OnActivateNewMode()
+{
+    hSlider.Realign();
+    vSlider.Realign();
+}
+
+void DiverUI::OnOddField()
+{
+    Buttons_Poll();
+    Display_Refresh();
+}
+
 void DiverUI::OnInterruptHSync()
 {
     ADC_ChannelConfTypeDef sConfig;
@@ -1467,43 +1492,14 @@ void DiverUI::OnInterruptHSync()
         HAL_ADC_Start(&hadc1);
         HAL_ADC_PollForConversion(&hadc1, 1);
         sample = HAL_ADC_GetValue(&hadc1);
-        HAL_ADC_Start(&hadc1);
-        HAL_ADC_PollForConversion(&hadc1, 1);
-        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
-        HAL_ADC_Start(&hadc1);
-        HAL_ADC_PollForConversion(&hadc1, 1);
-        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
-        HAL_ADC_Start(&hadc1);
-        HAL_ADC_PollForConversion(&hadc1, 1);
-        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
-        HAL_ADC_Start(&hadc1);
-        HAL_ADC_PollForConversion(&hadc1, 1);
-        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
         if (sample >= MAX_SLIDER_VALUE)
         {
             sample = MAX_SLIDER_VALUE;
         }
 
-        uint16_t slider_value = state.vphase_slider;
-        if (buttons[kButtonClear].value)
-        {
-            slider_value = state.altB_slider;
-        }
-
-        slider_value = (((((sample) * (vres + 7)) / MAX_SLIDER_VALUE) + slider_value * 7) >> 3);
-
-        // Control alt param if Clear is held down
-        if (buttons[kButtonClear].value)
-        {
-            if (slider_value != state.vphase_slider)
-            {
-                state.altB_slider = slider_value;
-            }
-        }
-        else
-        {
-            state.vphase_slider = slider_value;
-        }
+        vSlider.ProcessControlRate(1.0 * sample / MAX_SLIDER_VALUE);
+        vSlider.ProcessUIRate();
+        state.vphase_slider = uint16_t(state.param_vphase * vres);
     }
     else if (linecnt == 1)
     {
@@ -1529,54 +1525,15 @@ void DiverUI::OnInterruptHSync()
 
         HAL_ADC_Start(&hadc1);
         HAL_ADC_PollForConversion(&hadc1, 1);
-        sample = HAL_ADC_GetValue(&hadc1) >> 1;
-        HAL_ADC_Start(&hadc1);
-        HAL_ADC_PollForConversion(&hadc1, 1);
-        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
-        HAL_ADC_Start(&hadc1);
-        HAL_ADC_PollForConversion(&hadc1, 1);
-        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
-        HAL_ADC_Start(&hadc1);
-        HAL_ADC_PollForConversion(&hadc1, 1);
-        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
-        HAL_ADC_Start(&hadc1);
-        HAL_ADC_PollForConversion(&hadc1, 1);
-        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
-        HAL_ADC_Start(&hadc1);
-        HAL_ADC_PollForConversion(&hadc1, 1);
-        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
-        HAL_ADC_Start(&hadc1);
-        HAL_ADC_PollForConversion(&hadc1, 1);
-        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
-        HAL_ADC_Start(&hadc1);
-        HAL_ADC_PollForConversion(&hadc1, 1);
-        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
-        // sample = (sample + (HAL_ADC_GetValue(&hadc1))) >> 1;
+        sample = HAL_ADC_GetValue(&hadc1);
         if (sample >= MAX_SLIDER_VALUE)
         {
             sample = MAX_SLIDER_VALUE;
         }
 
-        // Control alt param if Clear is held down
-        uint16_t slider_value = state.hphase_slider;
-        if (buttons[kButtonClear].value)
-        {
-            slider_value = state.altA_slider;
-        }
-
-        slider_value = (((((sample) * (hres + 7)) / MAX_SLIDER_VALUE) + slider_value * 7) >> 3);
-
-        if (buttons[kButtonClear].value)
-        {
-            if (slider_value != state.hphase_slider)
-            {
-                state.altA_slider = slider_value;
-            }
-        }
-        else
-        {
-            state.hphase_slider = slider_value;
-        }
+        hSlider.ProcessControlRate(1.0 - (1.0 * sample / MAX_SLIDER_VALUE));
+        hSlider.ProcessUIRate();
+        state.hphase_slider = uint16_t((1.0 - state.param_hphase) * hres);
     }
     else if (linecnt == 2)
     {

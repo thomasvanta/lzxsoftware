@@ -24,8 +24,10 @@ struct DiverUIState
     uint16_t hphasecnt;
     uint16_t vphasecnt;
 
-    uint16_t altA_slider;
-    uint16_t altB_slider;
+    float param_hphase;
+    float param_vphase;
+    float param_altA;
+    float param_altB;
 };
 
 #endif

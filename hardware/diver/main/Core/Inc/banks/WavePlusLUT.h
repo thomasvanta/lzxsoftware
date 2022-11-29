@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "DiverBankBase.h"
+#include "DiverUI.h"
 
 uint16_t lut[MAX_BUFFER_SIZE];
 

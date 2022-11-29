@@ -5,7 +5,7 @@
 
 struct DiverBankBase
 {
-    virtual void OnInit(){};
+    virtual void Init(){};
     virtual void OnActivate(DiverUIState& state) = 0;
     virtual void OnOddField(DiverUIState& state) = 0;
     virtual void OnInterruptFrameStart(DiverUIState& state) = 0;

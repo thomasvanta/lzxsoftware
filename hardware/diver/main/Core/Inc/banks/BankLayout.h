@@ -43,8 +43,8 @@ DiverBankBase* banks[] = {
             .updateStyle = WavePlusLUT::UpdateStyle::PerFrame},
         [](WavePlusLUT::Lookup& l, DiverUIState& state)
         {
-            uint8_t num_bits = uint8_t(8.0 * state.altA_slider / MAX_SLIDER_VALUE) + 1;
-            uint8_t bit_offset = uint8_t(8.0 * state.altB_slider / MAX_SLIDER_VALUE);
+            uint8_t num_bits = uint8_t(8.0 * (1.0 - state.param_altA)) + 2;
+            uint8_t bit_offset = uint8_t(8.0 * state.param_altB);
             uint16_t full_mask = 0b1111111111;
             uint16_t mask = full_mask >> bit_offset & ~(full_mask >> (bit_offset + num_bits));
             return (((l.i * DAC_MAX_VALUE) / l.vres) & mask) << bit_offset;
@@ -71,8 +71,8 @@ DiverBankBase* banks[] = {
             .updateStyle = WavePlusLUT::UpdateStyle::PerFrame},
         [](WavePlusLUT::Lookup& l, DiverUIState& state)
         {
-            uint16_t wavelength = uint16_t(hres * (31.0 * state.altA_slider / MAX_SLIDER_VALUE + 1) / 32.0);
-            uint16_t pulsewidth = uint16_t(wavelength * 2.0 * state.altB_slider / MAX_SLIDER_VALUE) + 1;
+            uint16_t wavelength = uint16_t(vres * (31.0 * state.param_altA + 1) / 32.0);
+            uint16_t pulsewidth = uint16_t(wavelength * state.param_altB) + 1;
             bool on = l.i % wavelength < pulsewidth;
             return (on != state.invert) * DAC_MAX_VALUE;
         }
