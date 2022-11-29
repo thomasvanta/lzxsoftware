@@ -1,8 +1,9 @@
 #ifndef __DIVERUI_H__
 #define __DIVERUI_H__
 
-#include <cstdint>
 #include "DiverUIState.h"
+#include "pot_controller.h"
+#include <cstdint>
 
 class DiverUI
 {
@@ -11,14 +12,22 @@ public:
 
     DiverUI(DiverUIState& state) : state(state){};
 
-    void Pots_Poll();
+    void Init();
+
+    void OnActivateNewMode();
+    void OnOddField();
+    void OnInterruptHSync();
+
+    void Pots_Init();
     void Buttons_Poll();
 
     void Display_Init();
     void Display_Refresh();
 
-    void OnInterruptHSync();
+    mi::PotController hSlider;
+    mi::PotController vSlider;
 
+  protected:
     uint8_t frozen;
 
     uint8_t bank_display_mode;
@@ -37,7 +46,6 @@ public:
     uint8_t trigger_enable_scrolly;
     uint8_t trigger_enable_invert;
 
-private:
     void TVP5150AM1_Setup();
     void I2C_WriteRegister(uint32_t address, uint8_t byte1, uint8_t byte2);
 

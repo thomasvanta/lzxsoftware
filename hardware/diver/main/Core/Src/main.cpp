@@ -51,6 +51,7 @@ extern "C"
     void on_bank_changed()
     {
         banks[state.selected_bank]->OnActivate(state);
+        ui.OnActivateNewMode();
     }
 }
 
@@ -69,10 +70,10 @@ int main(void)
     MX_TIM1_Init();
     HAL_TIM_Base_MspInit(&htim1);
 
-    ui.Display_Init();
+    ui.Init();
     for (auto bank : banks)
     {
-        bank->OnInit();
+        bank->Init();
     }
 
     HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
@@ -122,9 +123,8 @@ int main(void)
         {
             oddfield_event = 0; // new odd field
 
-            ui.Buttons_Poll();
+            ui.OnOddField();
             banks[state.selected_bank]->OnOddField(state);
-            ui.Display_Refresh();
         }
     }
 }

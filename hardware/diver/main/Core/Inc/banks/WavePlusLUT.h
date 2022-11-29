@@ -1,16 +1,14 @@
-#ifndef __WAVEPLUSLUT_H__
-#define __WAVEPLUSLUT_H__
-
 #include "globals.h"
 #include "main.h"
 
 #include <functional>
 
 #include "DiverBankBase.h"
+#include "DiverUI.h"
 
 uint16_t lut[MAX_BUFFER_SIZE];
 
-struct WavePlusLUT : DiverBankBase
+struct WavePlusLUT : public DiverBankBase
 {
     typedef enum
     {
@@ -21,8 +19,11 @@ struct WavePlusLUT : DiverBankBase
 
     struct Options
     {
+        float altA_default;
+        float altB_default;
+        ScrollRange scrollrange_default;
         uint8_t deinterlace_mode;
-        UpdateStyle updateStyle;
+        UpdateStyle update_style;
     };
 
     struct Lookup
@@ -37,14 +38,24 @@ struct WavePlusLUT : DiverBankBase
     typedef std::function<uint16_t(Lookup&, DiverUIState&)> LookupTableBuilder;
     LookupTableBuilder lookupTableBuilder;
 
-    WavePlusLUT(Options options, LookupTableBuilder lookupTableBuilder)
+    WavePlusLUT(const Options& options, LookupTableBuilder lookupTableBuilder)
         : options(options), lookupTableBuilder(lookupTableBuilder)
+    {
+    }
+
+    void Init()
     {
     }
 
     void OnActivate(DiverUIState& state)
     {
-        if (options.updateStyle == UpdateStyle::Constant)
+        state.param_altA = options.altA_default;
+        state.param_altB = options.altB_default;
+
+        state.scrollx_range = options.scrollrange_default;
+        state.scrolly_range = options.scrollrange_default;
+
+        if (options.update_style == UpdateStyle::Constant)
         {
             GenerateLUT(state);
         }
@@ -52,7 +63,7 @@ struct WavePlusLUT : DiverBankBase
 
     void OnInterruptHSync(DiverUIState& state)
     {
-        if (options.updateStyle == UpdateStyle::PerLine)
+        if (options.update_style == UpdateStyle::PerLine)
         {
             GenerateLUT(state);
         }
@@ -80,7 +91,7 @@ struct WavePlusLUT : DiverBankBase
 
     void OnOddField(DiverUIState& state)
     {
-        if (options.updateStyle == UpdateStyle::PerFrame)
+        if (options.update_style == UpdateStyle::PerFrame)
         {
             GenerateLUT(state);
         }
@@ -299,5 +310,3 @@ struct WavePlusLUT : DiverBankBase
         }
     }
 };
-
-#endif

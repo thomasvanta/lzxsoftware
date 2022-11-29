@@ -1,4 +1,5 @@
 #include "DiverUI.h"
+#include "DiverUITables.h"
 
 #include "main.h"
 #include "stm32f4xx_hal.h"
@@ -114,340 +115,6 @@ struct LEDConfig
 LEDConfig leds[48];
 
 static const uint8_t display_address[1] = {IS32FL3738_ADDRESS_A};
-
-static const uint8_t display_pwm_startreg[48] = {
-    0x00,
-    0x20,
-    0x40,
-    0x60,
-    0x80,
-    0xA0,
-    0x02,
-    0x22,
-    0x42,
-    0x62,
-    0x82,
-    0xA2,
-    0x04,
-    0x24,
-    0x44,
-    0x64,
-    0x84,
-    0xA4,
-    0x06,
-    0x26,
-    0x46,
-    0x66,
-    0x86,
-    0xA6,
-    0x08,
-    0x28,
-    0x48,
-    0x68,
-    0x88,
-    0xA8,
-    0x0A,
-    0x2A,
-    0x4A,
-    0x6A,
-    0x8A,
-    0xAA,
-    0x0C,
-    0x2C,
-    0x4C,
-    0x6C,
-    0x8C,
-    0xAC,
-    0x0E,
-    0x2E,
-    0x4E,
-    0x6E,
-    0x8E,
-    0xAE};
-
-static const uint8_t displayledonreg[24] = {
-    0x00,
-    0x04,
-    0x08,
-    0x0C,
-    0x10,
-    0x14,
-    0x01,
-    0x05,
-    0x09,
-    0x0D,
-    0x11,
-    0x15};
-
-static const uint8_t gamma8[256] = {
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    3,
-    3,
-    3,
-    3,
-    3,
-    3,
-    3,
-    4,
-    4,
-    4,
-    4,
-    4,
-    5,
-    5,
-    5,
-    5,
-    6,
-    6,
-    6,
-    6,
-    7,
-    7,
-    7,
-    7,
-    8,
-    8,
-    8,
-    9,
-    9,
-    9,
-    10,
-    10,
-    10,
-    11,
-    11,
-    11,
-    12,
-    12,
-    13,
-    13,
-    13,
-    14,
-    14,
-    15,
-    15,
-    16,
-    16,
-    17,
-    17,
-    18,
-    18,
-    19,
-    19,
-    20,
-    20,
-    21,
-    21,
-    22,
-    22,
-    23,
-    24,
-    24,
-    25,
-    25,
-    26,
-    27,
-    27,
-    28,
-    29,
-    29,
-    30,
-    31,
-    32,
-    32,
-    33,
-    34,
-    35,
-    35,
-    36,
-    37,
-    38,
-    39,
-    39,
-    40,
-    41,
-    42,
-    43,
-    44,
-    45,
-    46,
-    47,
-    48,
-    49,
-    50,
-    50,
-    51,
-    52,
-    54,
-    55,
-    56,
-    57,
-    58,
-    59,
-    60,
-    61,
-    62,
-    63,
-    64,
-    66,
-    67,
-    68,
-    69,
-    70,
-    72,
-    73,
-    74,
-    75,
-    77,
-    78,
-    79,
-    81,
-    82,
-    83,
-    85,
-    86,
-    87,
-    89,
-    90,
-    92,
-    93,
-    95,
-    96,
-    98,
-    99,
-    101,
-    102,
-    104,
-    105,
-    107,
-    109,
-    110,
-    112,
-    114,
-    115,
-    117,
-    119,
-    120,
-    122,
-    124,
-    126,
-    127,
-    129,
-    131,
-    133,
-    135,
-    137,
-    138,
-    140,
-    142,
-    144,
-    146,
-    148,
-    150,
-    152,
-    154,
-    156,
-    158,
-    160,
-    162,
-    164,
-    167,
-    169,
-    171,
-    173,
-    175,
-    177,
-    180,
-    182,
-    184,
-    186,
-    189,
-    191,
-    193,
-    196,
-    198,
-    200,
-    203,
-    205,
-    208,
-    210,
-    213,
-    215,
-    218,
-    220,
-    223,
-    225,
-    228,
-    231,
-    233,
-    236,
-    239,
-    241,
-    244,
-    247,
-    249,
-    252,
-    255};
-
-// not used, ADC is read during hsync
-void DiverUI::Pots_Poll(void)
-{
-    HAL_ADC_Start(&hadc1);
-    for (uint32_t i = 0; i < NUM_POTENTIOMETERS; i++)
-    {
-        HAL_ADC_PollForConversion(&hadc1, 10);
-        pots[i].value = ((4095 - ((HAL_ADC_GetValue(&hadc1) * POTENTIOMETER_ADC_MAX) >> 11)) + pots[i].value) >> 1;
-    }
-    HAL_ADC_Stop(&hadc1);
-}
 
 void DiverUI::Buttons_Poll(void)
 {
@@ -594,6 +261,35 @@ void DiverUI::Buttons_Poll(void)
 
         state.selected_bank = 0;
         on_bank_changed();
+    }
+
+    // Handle Clear+Slider alt params
+    if (buttons[kButtonClear].rising)
+    {
+        // Enable alt parameters on sliders
+        hSlider.Lock();
+        vSlider.Lock();
+    }
+    else if (buttons[kButtonClear].falling)
+    {
+        // Release sliders into catchup mode
+        hSlider.Unlock();
+        vSlider.Unlock();
+    }
+
+    // Handle Clear+Scroll range selection
+    if (buttons[kButtonClear].value)
+    {
+        if (buttons[kButtonScrollX].rising)
+        {
+            state.scrollx_range = (ScrollRange)(((int)state.scrollx_range + 1) % (int)ScrollRange::NUM_SCROLL_RANGES);
+            buttons[kButtonScrollX].rising = 0;
+        }
+        if (buttons[kButtonScrollY].rising)
+        {
+            state.scrolly_range = (ScrollRange)(((int)state.scrolly_range + 1) % (int)ScrollRange::NUM_SCROLL_RANGES);
+            buttons[kButtonScrollY].rising = 0;
+        }
     }
 
     trigger_display_mode = buttons[kButtonMap].value;
@@ -771,14 +467,14 @@ void DiverUI::Buttons_Poll(void)
         if (state.hphase_slider >= (hres >> 1))
         {
             speed = state.hphase_slider - (hres >> 1);
-
-            state.hphasecnt = (state.hphasecnt + (speed >> 2)) % hres; // 6 is very slow, 8 wont move
+            uint16_t displacement = uint16_t(speed >> (int)state.scrollx_range);
+            state.hphasecnt = (state.hphasecnt + displacement) % hres;
         }
         else
         {
             speed = (hres >> 1) - state.hphase_slider;
-
-            state.hphasecnt = (hres + state.hphasecnt - (speed >> 2)) % hres;
+            uint16_t displacement = uint16_t(speed >> (int)state.scrollx_range);
+            state.hphasecnt = (hres + state.hphasecnt - displacement) % hres;
         }
         // hphase_slider = hphasecnt;
     }
@@ -789,16 +485,23 @@ void DiverUI::Buttons_Poll(void)
         if (state.vphase_slider >= (vres >> 1))
         {
             speed = state.vphase_slider - (vres >> 1);
-            state.vphasecnt = (state.vphasecnt + (speed >> 2)) % vres; // 1 is very fast
+            uint16_t displacement = uint16_t(speed >> (int)state.scrolly_range);
+            state.vphasecnt = (state.vphasecnt + displacement) % vres;
         }
         else
         {
             speed = (vres >> 1) - state.vphase_slider;
-
-            state.vphasecnt = (vres + state.vphasecnt - (speed >> 2)) % vres;
+            uint16_t displacement = uint16_t(speed >> (int)state.scrolly_range);
+            state.vphasecnt = (vres + state.vphasecnt - displacement) % vres;
         }
         // vphase_slider = vphasecnt;
     }
+}
+
+void DiverUI::Init()
+{
+    Pots_Init();
+    Display_Init();
 }
 
 void DiverUI::Display_Init()
@@ -854,6 +557,12 @@ void DiverUI::Display_Init()
             I2C_WriteRegister(display_address[i], display_pwm_startreg[k] + 17, 255);
         }
     }
+}
+
+void DiverUI::Pots_Init()
+{
+    hSlider.Init(&state.param_hphase, &state.param_altA, 1.0f, 0.0f);
+    vSlider.Init(&state.param_vphase, &state.param_altB, 1.0f, 0.0f);
 }
 
 void DiverUI::Display_Refresh()
@@ -1320,6 +1029,18 @@ void DiverUI::I2C_WriteRegister(uint32_t address, uint8_t byte1, uint8_t byte2)
     HAL_I2C_Master_Transmit(&hi2c1, address, i2cData, 2, 100);
 }
 
+void DiverUI::OnActivateNewMode()
+{
+    hSlider.Realign();
+    vSlider.Realign();
+}
+
+void DiverUI::OnOddField()
+{
+    Buttons_Poll();
+    Display_Refresh();
+}
+
 void DiverUI::OnInterruptHSync()
 {
     ADC_ChannelConfTypeDef sConfig;
@@ -1484,26 +1205,9 @@ void DiverUI::OnInterruptHSync()
             sample = MAX_SLIDER_VALUE;
         }
 
-        uint16_t slider_value = state.vphase_slider;
-        if (buttons[kButtonClear].value)
-        {
-            slider_value = state.altB_slider;
-        }
-
-        slider_value = (((((sample) * (vres + 7)) / MAX_SLIDER_VALUE) + slider_value * 7) >> 3);
-
-        // Control alt param if Clear is held down
-        if (buttons[kButtonClear].value)
-        {
-            if (slider_value != state.vphase_slider)
-            {
-                state.altB_slider = slider_value;
-            }
-        }
-        else
-        {
-            state.vphase_slider = slider_value;
-        }
+        vSlider.ProcessControlRate(1.0f * sample / MAX_SLIDER_VALUE);
+        vSlider.ProcessUIRate();
+        state.vphase_slider = uint16_t(state.param_vphase * vres);
     }
     else if (linecnt == 1)
     {
@@ -1557,26 +1261,9 @@ void DiverUI::OnInterruptHSync()
             sample = MAX_SLIDER_VALUE;
         }
 
-        // Control alt param if Clear is held down
-        uint16_t slider_value = state.hphase_slider;
-        if (buttons[kButtonClear].value)
-        {
-            slider_value = state.altA_slider;
-        }
-
-        slider_value = (((((sample) * (hres + 7)) / MAX_SLIDER_VALUE) + slider_value * 7) >> 3);
-
-        if (buttons[kButtonClear].value)
-        {
-            if (slider_value != state.hphase_slider)
-            {
-                state.altA_slider = slider_value;
-            }
-        }
-        else
-        {
-            state.hphase_slider = slider_value;
-        }
+        hSlider.ProcessControlRate(1.0f - (1.0f * sample / MAX_SLIDER_VALUE));
+        hSlider.ProcessUIRate();
+        state.hphase_slider = uint16_t((1.0f - state.param_hphase) * hres);
     }
     else if (linecnt == 2)
     {
