@@ -1492,6 +1492,18 @@ void DiverUI::OnInterruptHSync()
         HAL_ADC_Start(&hadc1);
         HAL_ADC_PollForConversion(&hadc1, 1);
         sample = HAL_ADC_GetValue(&hadc1);
+        HAL_ADC_Start(&hadc1);
+        HAL_ADC_PollForConversion(&hadc1, 1);
+        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
+        HAL_ADC_Start(&hadc1);
+        HAL_ADC_PollForConversion(&hadc1, 1);
+        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
+        HAL_ADC_Start(&hadc1);
+        HAL_ADC_PollForConversion(&hadc1, 1);
+        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
+        HAL_ADC_Start(&hadc1);
+        HAL_ADC_PollForConversion(&hadc1, 1);
+        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
         if (sample >= MAX_SLIDER_VALUE)
         {
             sample = MAX_SLIDER_VALUE;
@@ -1525,7 +1537,29 @@ void DiverUI::OnInterruptHSync()
 
         HAL_ADC_Start(&hadc1);
         HAL_ADC_PollForConversion(&hadc1, 1);
-        sample = HAL_ADC_GetValue(&hadc1);
+        sample = HAL_ADC_GetValue(&hadc1) >> 1;
+        HAL_ADC_Start(&hadc1);
+        HAL_ADC_PollForConversion(&hadc1, 1);
+        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
+        HAL_ADC_Start(&hadc1);
+        HAL_ADC_PollForConversion(&hadc1, 1);
+        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
+        HAL_ADC_Start(&hadc1);
+        HAL_ADC_PollForConversion(&hadc1, 1);
+        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
+        HAL_ADC_Start(&hadc1);
+        HAL_ADC_PollForConversion(&hadc1, 1);
+        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
+        HAL_ADC_Start(&hadc1);
+        HAL_ADC_PollForConversion(&hadc1, 1);
+        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
+        HAL_ADC_Start(&hadc1);
+        HAL_ADC_PollForConversion(&hadc1, 1);
+        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
+        HAL_ADC_Start(&hadc1);
+        HAL_ADC_PollForConversion(&hadc1, 1);
+        sample = (sample + HAL_ADC_GetValue(&hadc1)) >> 1;
+        // sample = (sample + (HAL_ADC_GetValue(&hadc1))) >> 1;
         if (sample >= MAX_SLIDER_VALUE)
         {
             sample = MAX_SLIDER_VALUE;
