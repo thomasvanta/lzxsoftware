@@ -584,6 +584,7 @@ void DiverUI::Buttons_Poll(void)
         on_bank_changed();
     }
 
+    // Handle Clear+Slider alt params
     if (buttons[kButtonClear].rising)
     {
         // Enable alt parameters on sliders
@@ -595,6 +596,21 @@ void DiverUI::Buttons_Poll(void)
         // Release sliders into catchup mode
         hSlider.Unlock();
         vSlider.Unlock();
+    }
+
+    // Handle Clear+Scroll range selection
+    if (buttons[kButtonClear].value)
+    {
+        if (buttons[kButtonScrollX].rising)
+        {
+            state.scrollx_range = (ScrollRange)(((int)state.scrollx_range + 1) % (int)ScrollRange::NUM_SCROLL_RANGES);
+            buttons[kButtonScrollX].rising = 0;
+        }
+        if (buttons[kButtonScrollY].rising)
+        {
+            state.scrolly_range = (ScrollRange)(((int)state.scrolly_range + 1) % (int)ScrollRange::NUM_SCROLL_RANGES);
+            buttons[kButtonScrollY].rising = 0;
+        }
     }
 
     trigger_display_mode = buttons[kButtonMap].value;
@@ -772,14 +788,14 @@ void DiverUI::Buttons_Poll(void)
         if (state.hphase_slider >= (hres >> 1))
         {
             speed = state.hphase_slider - (hres >> 1);
-
-            state.hphasecnt = (state.hphasecnt + (speed >> 2)) % hres;
+            uint16_t displacement = uint16_t(speed >> (int)state.scrollx_range);
+            state.hphasecnt = (state.hphasecnt + displacement) % hres;
         }
         else
         {
             speed = (hres >> 1) - state.hphase_slider;
-
-            state.hphasecnt = (hres + state.hphasecnt - (speed >> 2)) % hres;
+            uint16_t displacement = uint16_t(speed >> (int)state.scrollx_range);
+            state.hphasecnt = (hres + state.hphasecnt - displacement) % hres;
         }
         // hphase_slider = hphasecnt;
     }
@@ -790,13 +806,14 @@ void DiverUI::Buttons_Poll(void)
         if (state.vphase_slider >= (vres >> 1))
         {
             speed = state.vphase_slider - (vres >> 1);
-            state.vphasecnt = (state.vphasecnt + (speed >> 2)) % vres;
+            uint16_t displacement = uint16_t(speed >> (int)state.scrolly_range);
+            state.vphasecnt = (state.vphasecnt + displacement) % vres;
         }
         else
         {
             speed = (vres >> 1) - state.vphase_slider;
-
-            state.vphasecnt = (vres + state.vphasecnt - (speed >> 2)) % vres;
+            uint16_t displacement = uint16_t(speed >> (int)state.scrolly_range);
+            state.vphasecnt = (vres + state.vphasecnt - displacement) % vres;
         }
         // vphase_slider = vphasecnt;
     }

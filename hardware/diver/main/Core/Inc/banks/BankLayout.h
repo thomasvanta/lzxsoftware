@@ -5,6 +5,7 @@ DiverBankBase* banks[] = {
     new WavePlusLUT(
         {.altA_default = 0.0,
          .altB_default = 0.0,
+         .scrollrange_default = ScrollRange::Hare,
          .deinterlace_mode = 0,
          .update_style = WavePlusLUT::UpdateStyle::Constant},
         [](WavePlusLUT::Lookup& l, DiverUIState& state)
@@ -16,6 +17,7 @@ DiverBankBase* banks[] = {
     new WavePlusLUT(
         {.altA_default = 0.0,
          .altB_default = 0.0,
+         .scrollrange_default = ScrollRange::Hare,
          .deinterlace_mode = 0,
          .update_style = WavePlusLUT::UpdateStyle::Constant},
         [](WavePlusLUT::Lookup& l, DiverUIState& state)
@@ -30,6 +32,7 @@ DiverBankBase* banks[] = {
     new WavePlusLUT(
         {.altA_default = 0.0,
          .altB_default = 0.0,
+         .scrollrange_default = ScrollRange::Hare,
          .deinterlace_mode = 0,
          .update_style = WavePlusLUT::UpdateStyle::Constant},
         [](WavePlusLUT::Lookup& l, DiverUIState& state)
@@ -43,6 +46,7 @@ DiverBankBase* banks[] = {
     new WavePlusLUT(
         {.altA_default = 0.5,
          .altB_default = 0.0,
+         .scrollrange_default = ScrollRange::Hare,
          .deinterlace_mode = 0,
          .update_style = WavePlusLUT::UpdateStyle::PerFrame},
         [](WavePlusLUT::Lookup& l, DiverUIState& state)
@@ -58,6 +62,7 @@ DiverBankBase* banks[] = {
     new WavePlusLUT(
         {.altA_default = 0.0,
          .altB_default = 0.0,
+         .scrollrange_default = ScrollRange::Hare,
          .deinterlace_mode = 0,
          .update_style = WavePlusLUT::UpdateStyle::Constant},
         nullptr
@@ -66,6 +71,7 @@ DiverBankBase* banks[] = {
     new WavePlusLUT(
         {.altA_default = 0.0,
          .altB_default = 0.0,
+         .scrollrange_default = ScrollRange::Hare,
          .deinterlace_mode = 1,
          .update_style = WavePlusLUT::UpdateStyle::Constant},
         nullptr
@@ -74,6 +80,7 @@ DiverBankBase* banks[] = {
     new WavePlusLUT(
         {.altA_default = 0.5,
          .altB_default = 0.5,
+         .scrollrange_default = ScrollRange::Tortoise,
          .deinterlace_mode = 0,
          .update_style = WavePlusLUT::UpdateStyle::PerFrame},
         [](WavePlusLUT::Lookup& l, DiverUIState& state)

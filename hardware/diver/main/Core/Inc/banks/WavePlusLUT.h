@@ -21,6 +21,7 @@ struct WavePlusLUT : public DiverBankBase
     {
         float altA_default;
         float altB_default;
+        ScrollRange scrollrange_default;
         uint8_t deinterlace_mode;
         UpdateStyle update_style;
     };
@@ -50,6 +51,9 @@ struct WavePlusLUT : public DiverBankBase
     {
         state.param_altA = options.altA_default;
         state.param_altB = options.altB_default;
+
+        state.scrollx_range = options.scrollrange_default;
+        state.scrolly_range = options.scrollrange_default;
 
         if (options.update_style == UpdateStyle::Constant)
         {
