@@ -110,4 +110,21 @@ DiverBankBase* banks[] = {
             float val = state.invert ? std::abs(1 - n) : n;
             return val * DAC_MAX_VALUE;
         }
+    ),
+    // bank 9 - Sine wave
+    new WavePlusLUT(
+        {.altA_default = 0.1f,
+         .altB_default = 0.1f,
+         .scrollrange_default = ScrollRange::Hare,
+         .deinterlace_mode = 0,
+         .update_style = WavePlusLUT::UpdateStyle::PerFrame},
+        [](WavePlusLUT::Lookup& l, DiverUIState& state)
+        {
+            float pos = float(l.i) / float(l.vres);
+            float freq = l.vres * state.param_altA / MAX_SLIDER_VALUE;
+            float offset = 32 * state.param_altB / MAX_SLIDER_VALUE;
+            float sineWave = sin(pos * freq + offset);
+            float val = state.invert ? std::abs(1.0 - sineWave) : sineWave;
+            return val * DAC_MAX_VALUE;
+        }
     )};
