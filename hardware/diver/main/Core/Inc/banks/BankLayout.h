@@ -1,6 +1,8 @@
 #include "WavePlusLUT.h"
 
+#include "math_utils.h"
 #include "perlin.h"
+
 #include <cmath>
 
 DiverBankBase* banks[] = {
@@ -45,7 +47,32 @@ DiverBankBase* banks[] = {
             return uint16_t(b) & 1023;
         }
     ),
-    // Bank 4 - Factory Banks 4/5/6 - Stepped Ramps, with extra tiling parameter
+    // Unit tension curve - continuously variable log-linear-exp ramp [@dewb]
+    new WavePlusLUT(
+        {.altA_default = 0.5f,
+         .altB_default = 0.0f,
+         .scrollrange_default = ScrollRange::Hare,
+         .deinterlace_mode = 0,
+         .update_style = WavePlusLUT::UpdateStyle::PerFrame},
+        [](WavePlusLUT::Lookup& l, DiverUIState& state)
+        {
+            // k = -4, 4. 0 is NaN, but limit approaching 0 is linear
+            float k = 8.0 * (state.param_altA - 0.5f);
+            if (fabs(k) < 0.00001)
+            {
+                return ((l.i * DAC_MAX_VALUE) / l.vres) & 1023;
+            }
+
+            // use sigmoid to control hard/soft edges
+            // float edge = state.param_altB;
+
+            float a = float(l.i) / float(l.vres);
+            float b = (exp_approx(k * a) - 1.0f) / (exp_approx(k) - 1.0f);
+            // float c = logistic_curve(constrain(b, 0.0f, 1.0f), edge, 0.5f);
+            return uint16_t(b * DAC_MAX_VALUE) & 1023;
+        }
+    ),
+    // Factory Banks 4/5/6 combined - stepped linear ramps, with extra tiling parameter
     new WavePlusLUT(
         {.altA_default = 0.5f,
          .altB_default = 0.0f,
@@ -61,25 +88,7 @@ DiverBankBase* banks[] = {
             return (((l.i * DAC_MAX_VALUE) / l.vres) & mask) << bit_offset;
         }
     ),
-    // Bank 5 - Factory Bank 7 - Waveform Visualization 1 - No Ramp
-    new WavePlusLUT(
-        {.altA_default = 0.0f,
-         .altB_default = 0.0f,
-         .scrollrange_default = ScrollRange::Hare,
-         .deinterlace_mode = 0,
-         .update_style = WavePlusLUT::UpdateStyle::Constant},
-        nullptr
-    ),
-    // Bank 6 - Factory Bank 8 - Waveform Visualization 2 - No Ramp
-    new WavePlusLUT(
-        {.altA_default = 0.0f,
-         .altB_default = 0.0f,
-         .scrollrange_default = ScrollRange::Hare,
-         .deinterlace_mode = 1,
-         .update_style = WavePlusLUT::UpdateStyle::Constant},
-        nullptr
-    ),
-    // Bank 7 - Checkerboard Tablecloth (Square wave oscillator)
+    // Square wave oscillator (aka Checkered Tablecloth) [@dewb]
     new WavePlusLUT(
         {.altA_default = 0.5f,
          .altB_default = 0.5f,
@@ -94,7 +103,7 @@ DiverBankBase* banks[] = {
             return (on != state.invert) * DAC_MAX_VALUE;
         }
     ),
-    // Bank 8 - Dynamic Perlin Noise
+    // Dynamic Perlin Noise [@VanTa]
     new WavePlusLUT(
         {.altA_default = 0.1f,
          .altB_default = 0.1f,
@@ -111,7 +120,7 @@ DiverBankBase* banks[] = {
             return val * DAC_MAX_VALUE;
         }
     ),
-    // bank 9 - Sine wave
+    // Sine wave oscillator [@VanTa]
     new WavePlusLUT(
         {.altA_default = 0.1f,
          .altB_default = 0.1f,
@@ -127,4 +136,22 @@ DiverBankBase* banks[] = {
             float val = state.invert ? std::abs(1.0f - sineWave) : sineWave;
             return val * DAC_MAX_VALUE;
         }
+    ),
+    // Factory Bank 7 - Waveform Visualization 1 - No Ramp
+    new WavePlusLUT(
+        {.altA_default = 0.0f,
+         .altB_default = 0.0f,
+         .scrollrange_default = ScrollRange::Hare,
+         .deinterlace_mode = 0,
+         .update_style = WavePlusLUT::UpdateStyle::Constant},
+        nullptr
+    ),
+    // Factory Bank 8 - Waveform Visualization 2 - No Ramp
+    new WavePlusLUT(
+        {.altA_default = 0.0f,
+         .altB_default = 0.0f,
+         .scrollrange_default = ScrollRange::Hare,
+         .deinterlace_mode = 1,
+         .update_style = WavePlusLUT::UpdateStyle::Constant},
+        nullptr
     )};
