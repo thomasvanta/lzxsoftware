@@ -88,7 +88,7 @@ DiverBankBase* banks[] = {
          .update_style = WavePlusLUT::UpdateStyle::PerFrame},
         [](WavePlusLUT::Lookup& l, DiverUIState& state)
         {
-            uint16_t wavelength = uint16_t(vres * (31.0f * state.param_altA + 1) / 32.0f);
+            uint16_t wavelength = uint16_t(l.vres * (31.0f * state.param_altA + 1) / 32.0f);
             uint16_t pulsewidth = uint16_t(wavelength * state.param_altB) + 1;
             bool on = l.i % wavelength < pulsewidth;
             return (on != state.invert) * DAC_MAX_VALUE;
@@ -104,9 +104,9 @@ DiverBankBase* banks[] = {
         [](WavePlusLUT::Lookup& l, DiverUIState& state)
         {
             float pos = float(l.i) / float(l.vres);
-            float freq = (64 * state.param_altA + 0.1) / MAX_SLIDER_VALUE;
-            int depth = int(12 * state.param_altB / MAX_SLIDER_VALUE + 1);
-            float n = perlin1d(pos, freq, depth, 4.0);
+            float freq = (64 * state.param_altA + 0.1f);
+            int depth = int(12 * state.param_altB + 1);
+            float n = perlin1d(pos, freq, depth, 4.0f);
             float val = state.invert ? std::abs(1 - n) : n;
             return val * DAC_MAX_VALUE;
         }
@@ -121,10 +121,10 @@ DiverBankBase* banks[] = {
         [](WavePlusLUT::Lookup& l, DiverUIState& state)
         {
             float pos = float(l.i) / float(l.vres);
-            float freq = l.vres * state.param_altA / MAX_SLIDER_VALUE;
-            float offset = 32 * state.param_altB / MAX_SLIDER_VALUE;
+            float freq = l.vres * state.param_altA;
+            float offset = 32 * state.param_altB;
             float sineWave = sin(pos * freq + offset);
-            float val = state.invert ? std::abs(1.0 - sineWave) : sineWave;
+            float val = state.invert ? std::abs(1.0f - sineWave) : sineWave;
             return val * DAC_MAX_VALUE;
         }
     )};

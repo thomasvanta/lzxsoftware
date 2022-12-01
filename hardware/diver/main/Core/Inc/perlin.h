@@ -33,20 +33,20 @@ extern "C"
         return smooth_inter(s, t, x_frac); //+0.5
     }
 
-    float perlin1d(float x, float freq, int depth, float amplitude = 1.0)
+    float perlin1d(float x, float freq, int depth, float amplitude = 1.0f)
     {
         float xa = x * freq;
         float amp = amplitude;
-        float fin = 0;
-        float div = 0.0;
+        float fin = 0.0f;
+        float div = 0.0f;
 
         int i;
         for (i = 0; i < depth; i++)
         {
-            div += 256 * amp;
+            div += 256.0f * amp;
             fin += noise1d(xa) * amp;
-            amp /= 2;
-            xa *= 2;
+            amp *= 0.5f;
+            xa *= 2.0f;
         }
 
         return fin / div; //* 1023
@@ -79,18 +79,18 @@ extern "C"
     {
         float xa = x * freq;
         float ya = y * freq;
-        float amp = 1.0;
-        float fin = 0;
-        float div = 0.0;
+        float amp = 1.0f;
+        float fin = 0.0f;
+        float div = 0.0f;
 
         int i;
         for (i = 0; i < depth; i++)
         {
-            div += 256 * amp;
+            div += 256.0f * amp;
             fin += noise2d(xa, ya) * amp;
-            amp /= 2;
-            xa *= 2;
-            ya *= 2;
+            amp *= 0.5f;
+            xa *= 2.0f;
+            ya *= 2.0f;
         }
 
         return fin / div;
