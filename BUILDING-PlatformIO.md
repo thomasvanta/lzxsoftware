@@ -17,7 +17,7 @@
 3. Clone the forked repository at `https://github.com/Dewb/lzxsoftware` to your local computer using one of these methods:
    * Open Visual Studio Code and and choose "Clone Git repository" on the start screen and enter the above URL.
    * (Advanced) Use the [Git command-line tools](https://git-scm.com/download/win).
-4. If it's not already selected, switch to the `dewb/platformio` branch using the Visual Studio source control toolbar, or the `git switch` command.
+4. If it's not already selected, switch to the `dewb/refactor` or `dewb/platformio` branch using the Visual Studio source control toolbar, or the `git switch` command.
 
 ## Build the firmware and upload it to the hardware with USB
 
