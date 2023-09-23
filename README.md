@@ -12,9 +12,9 @@ Escher Sketch is confirmed to build but has not been tested on hardware.
 * [Building with PlatformIO](BUILDING-PlatformIO.md) (Windows/macOS/Linux)
 * [Building with VisualGDB](BUILDING-VisualGDB.md) (Windows only)
 
-## Uploading firmware images on hardware
+## Uploading firmware images to hardware
 
-Using the PlatformIO toolchain described in the above link offers the overall smoothest experience for both building and repeatedly uploading firmware. If you don't want to get involved with building and just want to install an already-built binary, read on.
+Using the PlatformIO toolchain described in the above link offers the overall smoothest experience for both building and repeatedly uploading firmware. However, if you don't want to get involved with building and just want to install an already-built binary, read on.
 
 > ***IMPORTANT NOTE**: Do not connect your module to a computer with USB at the same time it is connected to Eurorack power.*
 > 
