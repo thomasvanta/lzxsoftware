@@ -21,9 +21,9 @@
 
 ## Build the firmware and upload it to the hardware with USB
 
-***IMPORTANT NOTE**: Do not connect your module to a computer with USB at the same time it is connected to Eurorack power.*
-
-*Misconfiguring electronics could damage your module, your Eurorack case, and/or your computer. Proceed completely at your own risk!*
+> ***IMPORTANT NOTE**: Do not connect your module to a computer with USB at the same time it is connected to Eurorack power.*
+> 
+> *Misconfiguring electronics could damage your module, your Eurorack case, and/or your computer. Proceed completely at your own risk!*
 
 1. Disconnect your module from Eurorack power, and connect a USB A to Mini-B cable between your computer and the USB port on the back of the module.
 2. Diver should present as a USB device in Device Firmware Update mode. If it doesn't appear in your USB device tree, or you get DFU errors in later steps, you may need to install STM32 DFU drivers.
@@ -32,7 +32,9 @@
 
 ## Uploading firmware and debugging with ST-Link
 
-***IMPORTANT NOTE**: Misconfiguring electronics could damage your module, your Eurorack case, and/or your computer. Proceed completely at your own risk!*
+> ***IMPORTANT NOTE**: Misconfiguring electronics could damage your module, your Eurorack case, and/or your computer. Proceed completely at your own risk!*
+> 
+> *This method **does** allow you to connect the module to both Eurorack power and the STLink programmer at the same time. The STLinkv2-ISOL is recommended for additional protection.*
 
 Debugging with PlatformIO should work with one or more of the following devices: 
 
